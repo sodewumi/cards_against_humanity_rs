@@ -5,6 +5,7 @@ import os
 
 db = SQLAlchemy()
 
+
 # game_player = db.Table('game_player',
 #                        db.Column('game_id', db.Integer, db.ForeignKey('game.id')),
 #                        db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
@@ -21,11 +22,13 @@ class GamePlayer(db.Model):
     player_id = db.Column(db.Integer, db.ForeignKey("player.id"))
 
     def __repr__(self):
-        return "<GamePlayer: id=%d, game_id=%d, player_id=%d>" %(
+        return "<GamePlayer: id=%d, game_id=%d, player_id=%d>" % (
             self.id,
             self.game_id,
             self.player_id,
         )
+
+
 # round_player = db.Table('round_player',
 #                         db.Column('round_id', db.Integer, db.ForeignKey('round.id')),
 #                         db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
@@ -42,11 +45,13 @@ class RoundPlayer(db.Model):
     player_id = db.Column(db.Integer, db.ForeignKey("player.id"))
 
     def __repr__(self):
-        return "<RoundPlayer: id=%d, round_id=%d, player_id=%d>" %(
+        return "<RoundPlayer: id=%d, round_id=%d, player_id=%d>" % (
             self.id,
             self.round_id,
             self.player_id,
         )
+
+
 # player_hand = db.Table('player_hand',
 #                        db.Column('hand_id', db.Integer, db.ForeignKey('hand.id')),
 #                        db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
@@ -63,11 +68,12 @@ class PlayerHand(db.Model):
     player_id = db.Column(db.Integer, db.ForeignKey("player.id"))
 
     def __repr__(self):
-        return "<PlayerHand: id=%d, card_id=%d, player_id=%d>" %(
+        return "<PlayerHand: id=%d, card_id=%d, player_id=%d>" % (
             self.id,
             self.card_id,
             self.player_id,
         )
+
 
 class User(db.Model):
     __tablename__ = "user"
@@ -78,12 +84,13 @@ class User(db.Model):
     username = db.Column(db.String(15), nullable=False, unique=True)
 
     def __repr__(self):
-        return "<User: id=%d, email=%s, password=%s, username=%s>" %(
+        return "<User: id=%d, email=%s, password=%s, username=%s>" % (
             self.id,
             self.email,
             self.password,
             self.username,
         )
+
 
 class Room(db.Model):
     __tablename__ = "room"
@@ -92,22 +99,25 @@ class Room(db.Model):
     name = db.Column(db.String(20))
 
     def __repr__(self):
-        return "<Room: id=%d, name=%s>" %(
+        return "<Room: id=%d, name=%s>" % (
             self.id,
             self.name,
         )
+
 
 class Game(db.Model):
     __tablename__ = "game"
 
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
+    players = db.relationship("Player", backref="game")
 
     def __repr__(self):
-        return "<Game: id=%d, room_id=%d>" %(
+        return "<Game: id=%d, room_id=%d>" % (
             self.id,
-            self.room_id,
+            self.room_id or 0,
         )
+
 
 class Round(db.Model):
     __tablename__ = "round"
@@ -121,7 +131,7 @@ class Round(db.Model):
 
     def __repr__(self):
         return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
-            judge_id=%d, winner_id=%d>""" %(
+            judge_id=%d, winner_id=%d>""" % (
             self.id,
             self.game_id,
             self.round_number,
@@ -130,21 +140,23 @@ class Round(db.Model):
             self.winner_id,
         )
 
+
 class Player(db.Model):
     __tablename__ = "player"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(20))
-    game_id = db.Column(db.Integer, db.ForeignKey('room.id'))
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
 
     def __repr__(self):
-        return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" %(
+        return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (
             self.id,
-            self.user_id,
+            self.user_id or 0,
             self.name,
             self.game_id,
         )
+
 
 class Hand(db.Model):
     __tablename__ = "hand"
@@ -155,11 +167,12 @@ class Hand(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey("white_master_deck.id"))
 
     def __repr__(self):
-        return "<Hand: id=%d, player_id=%d, game_id=%s>" %(
+        return "<Hand: id=%d, player_id=%d, game_id=%s>" % (
             self.id,
             self.player_id,
             self.game_id,
         )
+
 
 class BlackMasterCard(db.Model):
     __tablename__ = "black_master_deck"
@@ -169,7 +182,7 @@ class BlackMasterCard(db.Model):
     pick_number = db.Column(db.Integer)
 
     def __repr__(self):
-        return "<Hand: id=%d, text=%s, pick_number=%d>" %(
+        return "<Hand: id=%d, text=%s, pick_number=%d>" % (
             self.id,
             self.text,
             self.pick_number,
@@ -184,11 +197,12 @@ class BlackGameCard(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('black_master_deck.id'))
 
     def __repr__(self):
-        return "<Hand: id=%d, game_id=%d, card_id=%d>" %(
+        return "<Hand: id=%d, game_id=%d, card_id=%d>" % (
             self.id,
             self.game_id,
             self.card_id,
         )
+
 
 class WhiteMasterCard(db.Model):
     __tablename__ = "white_master_deck"
@@ -197,10 +211,11 @@ class WhiteMasterCard(db.Model):
     text = db.Column(db.String(200))
 
     def __repr__(self):
-        return "<WhiteMasterDeck: id=%d, text=%s>" %(
+        return "<WhiteMasterDeck: id=%d, text=%s>" % (
             self.id,
             self.text,
         )
+
 
 class WhiteGameCard(db.Model):
     __tablename__ = "white_game_deck"
@@ -210,11 +225,12 @@ class WhiteGameCard(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('white_master_deck.id'))
 
     def __repr__(self):
-        return "<WhiteGameDeck: id=%d, game_id=%d, card_id=%d>" %(
+        return "<WhiteGameDeck: id=%d, game_id=%d, card_id=%d>" % (
             self.id,
             self.game_id,
             self.card_id,
         )
+
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
@@ -231,4 +247,5 @@ def connect_to_db(app):
 
 if __name__ == "__main__":
     from app import app
+
     connect_to_db(app)
