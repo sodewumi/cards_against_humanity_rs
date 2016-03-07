@@ -1,6 +1,6 @@
 from app import app
 from flask import Flask, render_template, url_for, request
-from helpers.forms import LoginForm
+from helpers import forms
 
 @app.route('/')
 @app.route('/index')
@@ -11,7 +11,7 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    form = forms.LoginForm()
     return render_template('login.html', 
                            title='Sign In',
                            form=form)
