@@ -107,9 +107,10 @@ class Hand(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    card_id = db.Column(db.Integer, db.ForeignKey("white_master_deck.id"))
 
 
-class BlackMasterDeck(db.Model):
+class BlackMasterCard(db.Model):
     __tablename__ = "black_master_deck"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -117,7 +118,7 @@ class BlackMasterDeck(db.Model):
     pick_number = db.Column(db.Integer)
 
 
-class BlackGameDeck(db.Model):
+class BlackGameCard(db.Model):
     __tablename__ = "black_game_deck"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -125,19 +126,19 @@ class BlackGameDeck(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('black_master_deck.id'))
 
 
-class WhiteMasterDeck(db.Model):
+class WhiteMasterCard(db.Model):
     __tablename__ = "white_master_deck"
 
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200))
 
 
-class WhiteGameDeck(db.Model):
+class WhiteGameCard(db.Model):
     __tablename__ = "white_game_deck"
 
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
-    card_id = db.Column(db.Integer, db.ForeignKey('black_master_deck.id'))
+    card_id = db.Column(db.Integer, db.ForeignKey('white_master_deck.id'))
 
 
 def connect_to_db(app):
@@ -151,6 +152,7 @@ def connect_to_db(app):
     db.app = app
     db.init_app(app)
     db.create_all()
+
 
 if __name__ == "__main__":
     from app import app
