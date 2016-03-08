@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import UniqueConstraint
 from flask import Flask
 
 import os
@@ -121,6 +122,9 @@ class Game(db.Model):
 
 class Round(db.Model):
     __tablename__ = "round"
+    __table_args__= (
+        UniqueConstraint('id', 'game_id', 'round_number'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
@@ -148,6 +152,7 @@ class Player(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(20))
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    cards = db.relationship("Hand", backref="player")
 
     def __repr__(self):
         return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (
@@ -167,10 +172,11 @@ class Hand(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey("white_master_deck.id"))
 
     def __repr__(self):
-        return "<Hand: id=%d, player_id=%d, game_id=%s>" % (
+        return "<Hand: id=%d, player_id=%d, game_id=%d>, card_id=%d>" % (
             self.id,
             self.player_id,
             self.game_id,
+            self.card_id
         )
 
 

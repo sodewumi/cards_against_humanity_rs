@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from models import *
 
+import logic
+
 import os
 
 db = SQLAlchemy()
@@ -25,7 +27,7 @@ def drop_db():
 
 def seed_card_data():
     """
-
+    Seeds master decks for all games
     :return:
     """
     import os, json
@@ -46,26 +48,53 @@ def seed_card_data():
             raise Exception("Invalid JSON format.")
 
 
-def initialize_game_decks():
-    black_cards = BlackMasterCard.query.all()
-    for black_card in black_cards:
-        db.session.add(BlackGameCard(card_id=black_card.id))
+def initialize_white_game_deck(game_id):
+    """Initializes new white card deck for a game."""
 
     white_cards = WhiteMasterCard.query.all()
     for white_card in white_cards:
-        db.session.add(WhiteGameCard(card_id=white_card.id))
+        db.session.add(WhiteGameCard(game_id=game_id, card_id=white_card.id))
 
     db.session.commit()
 
 
-def seed_db_data():
+def initialize_black_game_deck(game_id):
+    """Initializes new white card deck for a game."""
+    black_cards = BlackMasterCard.query.all()
+    for black_card in black_cards:
+        db.session.add(BlackGameCard(game_id=game_id, card_id=black_card.id))
+
+    db.session.commit()
+
+def seed_game_data():
     game = Game()
     db.session.add(game)
     db.session.commit()
 
+
+def seed_player_hands():
     g = Game.query.first()
 
-    """seed initial database records for testing"""
+    p1 = Player.query.filter(Player.name == 'Randall').one()
+    p2 = Player.query.filter(Player.name == 'Stella').one()
+    p3 = Player.query.filter(Player.name == 'Robot1').one()
+    p4 = Player.query.filter(Player.name == 'Robot2').one()
+
+    h1 = Hand(player_id=p1.id, game_id=g.id)
+    db.session.add(h1)
+    h2 = Hand(player_id=p2.id, game_id=g.id)
+    db.session.add(h2)
+    h3 = Hand(player_id=p3.id, game_id=g.id)
+    db.session.add(h3)
+    h4 = Hand(player_id=p4.id, game_id=g.id)
+    db.session.add(h4)
+    db.session.commit()
+
+
+def seed_player_data():
+    """seed dummy players for testing"""
+    g = Game.query.first()
+
     p1 = Player(name='Randall', game_id=g.id)
     db.session.add(p1)
     p2 = Player(name='Stella', game_id=g.id)
@@ -76,20 +105,44 @@ def seed_db_data():
     db.session.add(p4)
     db.session.commit()
 
-    p1 = Player.query.filter(Player.name == 'Randall').one()
-    p2 = Player.query.filter(Player.name == 'Stella').one()
-    p3 = Player.query.filter(Player.name == 'Robot1').one()
-    p4 = Player.query.filter(Player.name == 'Robot2').one()
 
-    h1 = Hand(player_id=p1.id, game_id=game.id)
-    db.session.add(h1)
-    h2 = Hand(player_id=p2.id, game_id=game.id)
-    db.session.add(h2)
-    h3 = Hand(player_id=p3.id, game_id=game.id)
-    db.session.add(h3)
-    h4 = Hand(player_id=p4.id, game_id=game.id)
-    db.session.add(h4)
+def seed_round(
+):
+    """Seed a new round for testing purposes"""
+
+    new_round = Round(
+        game_id=Game.query.first().id,
+        black_card_id=BlackGameCard.query.first().id,
+        judge_id=Player.query.first().id
+    )
+
+    db.session.add(new_round)
     db.session.commit()
+
+
+def deal_white_card(
+        player_id,
+        game_id
+):
+    white_card = WhiteGameCard.query.first()
+    # print ('Got White Card: ' + str(white_card))
+    # WhiteGameCard.query.filer(WhiteGameCard.id==white_card.id).delete()
+    hand = Hand(player_id=player_id, game_id=game_id, card_id=white_card.id)
+    # print ('Created Hand: ' + str(hand))
+    db.session.add(hand)
+    db.session.commit()
+    WhiteGameCard.query.filter(WhiteGameCard.id == white_card.id).delete()
+    db.session.commit()
+
+
+def setup_for_testing():
+    """Run this first to set up everything for testing"""
+
+    seed_game_data()
+    seed_card_data()
+    initialize_black_game_deck(game_id=1)
+    initialize_white_game_deck(game_id=1)
+    seed_player_data()
 
 
 def connect_to_db(app):

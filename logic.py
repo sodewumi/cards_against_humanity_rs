@@ -1,3 +1,5 @@
+from flask_sqlalchemy import SQLAlchemy
+
 from models import BlackGameCard
 from models import BlackMasterCard
 from models import Game
@@ -11,6 +13,8 @@ from models import RoundPlayer
 from models import User
 from models import WhiteMasterCard
 from models import WhiteGameCard
+
+db = SQLAlchemy()
 
 
 # CREATE
@@ -51,8 +55,24 @@ def create_new_game(
     db.session.commit()
 
 
+def create_new_round(
+        game_id,
+        black_card_id,
+        judge_id
+):
+    new_round = Round(
+        game_id=game_id,
+        black_card_id=black_card_id,
+        judge_id=judge_id
+    )
+
+    db.session.add(new_round)
+    db.session.commit()
+
+
 # GET
 def get_game_players(
         game_id
 ):
     return Player.query.filter(Player.game_id == game_id).all()
+
