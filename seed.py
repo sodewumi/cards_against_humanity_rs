@@ -51,10 +51,23 @@ def seed_card_data():
 def initialize_white_game_deck(game_id):
     """Initializes new white card deck for a game."""
 
+    cards = []
     white_cards = WhiteMasterCard.query.all()
     for white_card in white_cards:
-        db.session.add(WhiteGameCard(game_id=game_id, card_id=white_card.id))
+        cards.append(WhiteGameCard(game_id=game_id, card_id=white_card.id))
 
+    db.session.bulk_save_objects(cards)
+    db.session.commit()
+
+def replenish_white_deck(game_id):
+    """"""
+
+    cards = []
+    discarded_cards = WhiteMasterCard.query.filter(~WhiteMasterCard.id.in_(WhiteGameCard.query.all()))
+    for discarded_card in discarded_cards:
+        cards.append(WhiteGameCard(game_id=game_id, card_id=discarded_card.id))
+
+    db.session.bulk_save_objects(cards)
     db.session.commit()
 
 
@@ -65,6 +78,7 @@ def initialize_black_game_deck(game_id):
         db.session.add(BlackGameCard(game_id=game_id, card_id=black_card.id))
 
     db.session.commit()
+
 
 def seed_game_data():
     game = Game()
@@ -122,17 +136,32 @@ def seed_round(
 
 def deal_white_card(
         player_id,
-        game_id
+        game_id,
+        number_of_cards
 ):
-    white_card = WhiteGameCard.query.first()
-    # print ('Got White Card: ' + str(white_card))
-    # WhiteGameCard.query.filer(WhiteGameCard.id==white_card.id).delete()
-    hand = Hand(player_id=player_id, game_id=game_id, card_id=white_card.id)
-    # print ('Created Hand: ' + str(hand))
-    db.session.add(hand)
+    objects =[]
+    white_cards = WhiteGameCard.query.limit(number_of_cards)
+    for white_card in white_cards:
+        objects.append(Hand(player_id=player_id, game_id=game_id, card_id=white_card.id))
+    db.session.bulk_save_objects(objects)
     db.session.commit()
-    WhiteGameCard.query.filter(WhiteGameCard.id == white_card.id).delete()
+
+    for obj in objects:
+        WhiteGameCard.query.filter(WhiteGameCard.id == obj.card_id).delete()
     db.session.commit()
+
+    # white_card = WhiteGameCard.query.first()
+    # # print ('Got White Card: ' + str(white_card))
+    # # WhiteGameCard.query.filer(WhiteGameCard.id==white_card.id).delete()
+    # hand = Hand(player_id=player_id, game_id=game_id, card_id=white_card.id)
+    # # print ('Created Hand: ' + str(hand))
+    # db.session.add(hand)
+    # db.session.commit()
+    # WhiteGameCard.query.filter(WhiteGameCard.id == white_card.id).delete()
+    # db.session.commit()
+
+    player = Player.query.first()
+    print (player.cards)
 
 
 def setup_for_testing():
@@ -143,6 +172,12 @@ def setup_for_testing():
     initialize_black_game_deck(game_id=1)
     initialize_white_game_deck(game_id=1)
     seed_player_data()
+
+
+def deal_cards(player_id, number_of_cards):
+
+    for i in range(number_of_cards):
+        card = Card()
 
 
 def connect_to_db(app):
