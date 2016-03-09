@@ -129,9 +129,13 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     round_number = db.Column(db.Integer)
-    black_card_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    black_card_id = db.Column(db.Integer, db.ForeignKey('black_master_card.id'))
     judge_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     winner_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+    black_card = db.relationship(
+        "BlackMasterCard", backref=db.backref("round", uselist=False)
+    )
+    white_cards = db.relationship("Round_White_Card", backref="round")
 
     def __repr__(self):
         return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
@@ -142,6 +146,34 @@ class Round(db.Model):
             self.black_card_id,
             self.judge_id,
             self.winner_id,
+        )
+
+
+class Round_White_Card(db.Model):
+    __tablename__= "round_white_card"
+    __table_args__= (
+        UniqueConstraint('game_id', 'round_id', 'player_id', 'white_card_id', 'pick_num'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    # round_num = db.Column(db.Integer)
+    round_id = db.Column(db.Integer, db.ForeignKey('round.id'))
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+    white_card_id = db.Column(db.Integer, db.ForeignKey('white_master_card.id'))
+    pick_num = db.Column(db.Integer, db.ForeignKey('player.id'))
+    round = db.relationship(
+        "Round", backref=db.backref("round_white_card")
+    )
+
+    def __repr__(self):
+        return """<Game: id=%d, Round: round_id=%d, Player: player_id=%d, Card: white_card_id=%d,
+            Pick: pick_num=%d>""" % (
+            self.game_id,
+            self.round_id,
+            self.player_id,
+            self.white_card_id,
+            self.pick_num
         )
 
 

@@ -162,6 +162,49 @@ def seed_round(
     db.session.commit()
 
 
+def play_white_card(
+        game_id,
+        round_id,
+        player_id,
+        card_id,
+        pick_num
+):
+    """Check if card is already in play for this round."""
+    rwp = Round_White_Card.query.filter(
+        Round_White_Card.game_id==game_id,
+        Round_White_Card.round_id==round_id,
+        Round_White_Card.player_id==player_id,
+        Round_White_Card.white_card_id==card_id,
+        Round_White_Card.pick_num==pick_num
+    )
+
+    """If card is in play throw exception."""
+    if rwp is not None:
+        raise Exception()
+
+    round = Round.query.filter(Round.game_id==game_id, Round.id==round_id)
+
+    """Else play the card for this round."""
+    rwp = Round_White_Card(
+        game_id=game_id,
+        round_id=round_id,
+        player_id=player_id,
+        white_card_id=card_id,
+        pick_num=pick_num)
+
+    db.session.add(rwp)
+    db.session.commit()
+
+    """Remove played card from player's hand"""
+    db.session.query(Hand).filter(
+        Hand.game_id==game_id,
+        Hand.player_id==player_id,
+        Hand.card_id==card_id
+    ).delete()
+    db.session.commit()
+
+
+
 def setup_for_testing():
     """Run this first to set up everything for testing"""
 
