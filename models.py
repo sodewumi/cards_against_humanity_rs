@@ -65,7 +65,7 @@ class PlayerHand(db.Model):
     __tablename__ = "player_hand"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    card_id = db.Column(db.Integer, db.ForeignKey("white_master_deck.id"))
+    card_id = db.Column(db.Integer, db.ForeignKey("white_master_card.id"))
     player_id = db.Column(db.Integer, db.ForeignKey("player.id"))
 
     def __repr__(self):
@@ -169,7 +169,7 @@ class Hand(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
-    card_id = db.Column(db.Integer, db.ForeignKey("white_master_deck.id"))
+    card_id = db.Column(db.Integer, db.ForeignKey("white_master_card.id"))
 
     def __repr__(self):
         return "<Hand: id=%d, player_id=%d, game_id=%d>, card_id=%d>" % (
@@ -181,7 +181,7 @@ class Hand(db.Model):
 
 
 class BlackMasterCard(db.Model):
-    __tablename__ = "black_master_deck"
+    __tablename__ = "black_master_card"
 
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200))
@@ -196,11 +196,11 @@ class BlackMasterCard(db.Model):
 
 
 class BlackGameCard(db.Model):
-    __tablename__ = "black_game_deck"
+    __tablename__ = "black_game_card"
 
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
-    card_id = db.Column(db.Integer, db.ForeignKey('black_master_deck.id'))
+    card_id = db.Column(db.Integer, db.ForeignKey('black_master_card.id'))
 
     def __repr__(self):
         return "<Hand: id=%d, game_id=%d, card_id=%d>" % (
@@ -211,27 +211,27 @@ class BlackGameCard(db.Model):
 
 
 class WhiteMasterCard(db.Model):
-    __tablename__ = "white_master_deck"
+    __tablename__ = "white_master_card"
 
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200))
 
     def __repr__(self):
-        return "<WhiteMasterDeck: id=%d, text=%s>" % (
+        return "<WhiteMasterCard: id=%d, text=%s>" % (
             self.id,
             self.text,
         )
 
 
 class WhiteGameCard(db.Model):
-    __tablename__ = "white_game_deck"
+    __tablename__ = "white_game_card"
 
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
-    card_id = db.Column(db.Integer, db.ForeignKey('white_master_deck.id'))
+    card_id = db.Column(db.Integer, db.ForeignKey('white_master_card.id'))
 
     def __repr__(self):
-        return "<WhiteGameDeck: id=%d, game_id=%d, card_id=%d>" % (
+        return "<WhiteGameCard: id=%d, game_id=%d, card_id=%d>" % (
             self.id,
             self.game_id,
             self.card_id,

@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from models import *
+from sqlalchemy import and_, or_
 
 import logic
 
@@ -48,6 +49,18 @@ def seed_card_data():
             raise Exception("Invalid JSON format.")
 
 
+def initialize_black_game_deck(game_id):
+    """Initializes new black card deck for a game."""
+
+    cards = []
+    black_cards = BlackMasterCard.query.all()
+    for black_card in black_cards:
+        cards.append(BlackGameCard(game_id=game_id, card_id=black_card.id))
+
+    db.session.bulk_save_objects(cards)
+    db.session.commit()
+
+
 def initialize_white_game_deck(game_id):
     """Initializes new white card deck for a game."""
 
@@ -58,6 +71,7 @@ def initialize_white_game_deck(game_id):
 
     db.session.bulk_save_objects(cards)
     db.session.commit()
+
 
 def replenish_white_deck(game_id):
     """"""
@@ -71,11 +85,25 @@ def replenish_white_deck(game_id):
     db.session.commit()
 
 
+def replenish_black_deck(game_id):
+    """"""
+
+    cards = []
+    discarded_cards = BlackMasterCard.query.filter(~BlackMasterCard.id.in_(BlackGameCard.query.all()))
+    for discarded_card in discarded_cards:
+        cards.append(BlackGameCard(game_id=game_id, card_id=discarded_card.id))
+
+    db.session.bulk_save_objects(cards)
+    db.session.commit()
+
+
 def initialize_black_game_deck(game_id):
     """Initializes new white card deck for a game."""
     black_cards = BlackMasterCard.query.all()
     for black_card in black_cards:
-        db.session.add(BlackGameCard(game_id=game_id, card_id=black_card.id))
+        db.session.add(
+            BlackGameCard(game_id=game_id, card_id=black_card.id)
+        )
 
     db.session.commit()
 
@@ -105,7 +133,7 @@ def seed_player_hands():
     db.session.commit()
 
 
-def seed_player_data():
+def seed_players():
     """seed dummy players for testing"""
     g = Game.query.first()
 
@@ -134,36 +162,6 @@ def seed_round(
     db.session.commit()
 
 
-def deal_white_card(
-        player_id,
-        game_id,
-        number_of_cards
-):
-    objects =[]
-    white_cards = WhiteGameCard.query.limit(number_of_cards)
-    for white_card in white_cards:
-        objects.append(Hand(player_id=player_id, game_id=game_id, card_id=white_card.id))
-    db.session.bulk_save_objects(objects)
-    db.session.commit()
-
-    for obj in objects:
-        WhiteGameCard.query.filter(WhiteGameCard.id == obj.card_id).delete()
-    db.session.commit()
-
-    # white_card = WhiteGameCard.query.first()
-    # # print ('Got White Card: ' + str(white_card))
-    # # WhiteGameCard.query.filer(WhiteGameCard.id==white_card.id).delete()
-    # hand = Hand(player_id=player_id, game_id=game_id, card_id=white_card.id)
-    # # print ('Created Hand: ' + str(hand))
-    # db.session.add(hand)
-    # db.session.commit()
-    # WhiteGameCard.query.filter(WhiteGameCard.id == white_card.id).delete()
-    # db.session.commit()
-
-    player = Player.query.first()
-    print (player.cards)
-
-
 def setup_for_testing():
     """Run this first to set up everything for testing"""
 
@@ -171,13 +169,7 @@ def setup_for_testing():
     seed_card_data()
     initialize_black_game_deck(game_id=1)
     initialize_white_game_deck(game_id=1)
-    seed_player_data()
-
-
-def deal_cards(player_id, number_of_cards):
-
-    for i in range(number_of_cards):
-        card = Card()
+    seed_players()
 
 
 def connect_to_db(app):
