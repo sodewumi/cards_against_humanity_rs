@@ -11,6 +11,7 @@ from models import RoundPlayer
 from models import User
 from models import WhiteMasterDeck
 from models import WhiteGameDeck
+from models import db
 
 
 def create_new_user(
@@ -46,3 +47,24 @@ def create_new_game(
 
 	db.session.add(new_game)
 	db.session.commit()
+
+def create_new_hand(
+	player_id,
+	game_id,
+):
+
+def get_player_hand():
+
+def initialize_white_game_deck():
+    white_cards = WhiteMasterCard.query.all()
+    for white_card in white_cards:
+        db.session.add(WhiteGameCard(card_id=white_card.id))
+
+    db.session.commit()
+
+def initalize_black_game_deck():
+    black_cards = BlackMasterCard.query.all()
+    for black_card in black_cards:
+        db.session.add(BlackGameCard(card_id=black_card.id))
+
+    db.session.commit()
