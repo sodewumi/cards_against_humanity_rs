@@ -23,9 +23,9 @@ class LoginForm(Form):
             self.username.errors.append('Unknown username')
             return False
 
-        # if not user.check_password(self.password.data):
-        #     self.password.errors.append('Invalid password')
-        #     return False
+        if not user.check_password(self.password.data):
+            self.password.errors.append('Invalid password')
+            return False
 
         self.user = user
         return True
@@ -44,20 +44,20 @@ class RegisterForm(Form):
         validators=[DataRequired()],
     )
 
-    # user = User.query.filter_by(
-    #     username=self.username.data).first()
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
 
-    # if user is None:
-    #     self.username.errors.append('Unknown username')
-    #     return False
+    def validate(self):
+        rv = Form.validate(self)
+        if not rv:
+            return False
 
-    # if user is None:
-    #     self.username.errors.append('Unknown username')
-    #     return False
+        if get_user_by_username(self.username.data):
+            self.username.errors.append('Username taken')
+            return False
 
-    # if not user.check_password(self.password.data):
-    #     self.password.errors.append('Invalid password')
-    #     return False
+        if get_user_by_email(self.email.data):
+            self.email.errors.append('Email Taken')
+            return False
 
-    # self.user = user
-    # return True
+        return True

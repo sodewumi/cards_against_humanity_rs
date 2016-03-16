@@ -1,3 +1,4 @@
+from Crypto.Hash import SHA256
 from flask import Flask, flash, redirect, render_template, url_for, request, session
 
 from app import app
@@ -7,13 +8,12 @@ from logic import create_new_user, get_user_by_username, get_user_by_email
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello, World!"
+    return render_template('index.html')
 
 
 @app.route('/login', methods=['Get', 'Post'])
 def login():
     login_form = forms.LoginForm()
-    # register_form = forms.RegisterForm()
 
     if login_form.validate_on_submit():
         flash(u'Successfully logged in as %s' % login_form.user.username)
@@ -45,24 +45,26 @@ def register_post():
         register_password = request.form['password']
         register_username = request.form['username']
 
-        if get_user_by_email(register_email):
-            flash('A person has already registered with the email')
+        register_password_hashed = SHA256.new(register_password.encode('utf-8')).hexdigest()
+
+
+        if register_email and register_password_hashed and register_username:
+            create_new_user(
+                email=register_email,
+                password=register_password_hashed,
+                username=register_username,
+            )
+            flash('Thanks for creating an account! Please sign in')
             return redirect('/')
-        elif get_user_by_username(register_username):
-            flash('A person has already taken that username')
-            return redirect('/')
-        else:
-            if register_email and register_password and register_username:
-                create_new_user(
-                    email=register_email,
-                    password=register_password,
-                    username=register_username,
-                )
-                flash('Thanks for creating an account with Gutenberg Translate! Please sign in')
-                return redirect('/')
     else:
         return render_template(
             'register.html',
             register_form=register_form,
         )
 
+@app.route('/logout')
+def logout_user():
+    """Remove login information from session"""
+    session.pop('user_id')
+    flash("You've successfully logged out. Goodbye.")
+    return redirect("/")
