@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
-
-  <form action="" method="post" name="login">
+  <form action="/login" method="post" name="login">
       {{ login_form.hidden_tag() }}
       <p>
           Please enter your Username:<br>
@@ -19,31 +18,5 @@
           {% endfor %}<br>
       </p>
       <p><input type="submit" value="Sign In"></p>
-  </form>
-
-  <form action="" method="post" name="register">
-      {{ register_form.hidden_tag() }}
-      <p>
-          Please enter your Username:<br>
-          {{ register_form.username(size=80) }}<br>
-          {% for error in register_form.username.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-          {% endfor %}<br>
-      </p>
-      <p>
-          Please enter your Email:<br>
-          {{ register_form.email(size=80) }}<br>
-          {% for error in register_form.email.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-          {% endfor %}<br>
-      </p>
-      <p>
-          Please enter your Password:<br>
-          {{ register_form.password(size=80) }}<br>
-          {% for error in register_form.password.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-          {% endfor %}<br>
-      </p>
-      <p><input type="submit" value="Register"></p>
   </form>
 {% endblock %}
