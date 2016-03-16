@@ -8,10 +8,13 @@ def index():
     return "Hello, World!"
 
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = forms.LoginForm()
-    return render_template('login.html', 
-                           title='Sign In',
-                           form=form)
+    login_form = forms.LoginForm()
+    register_form = forms.RegisterForm()
+    return render_template(
+        'login.html',
+       title='Sign In',
+       login_form=login_form,
+       register_form=register_form
+    )
