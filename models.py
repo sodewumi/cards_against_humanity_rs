@@ -177,11 +177,25 @@ class Game(db.Model):
                               single_parent=True,
                               lazy='dynamic')
 
+    @property
+    def max_num_of_players(self):
+        return 8
+
     def __repr__(self):
         return "<Game: id=%d, room_id=%d>" % (
             self.id,
             self.room_id or 0,
         )
+
+    def add_player(self, player):
+        if not self.players.filter(Player.user_id == player.user_id).count() == 0:
+            raise Exception('User is already in game')
+        elif self.players.count() == self.max_num_of_players:
+            raise Exception('Max number of players for game reached.')
+        self.players.append(player)
+        print('Player added.' + '{0} player(s) total.'.format(self.players.count()))
+
+        return self
 
 
 class Round(db.Model):
@@ -199,7 +213,7 @@ class Round(db.Model):
     black_card = db.relationship(
         "BlackMasterCard", backref=db.backref("round", uselist=False)
     )
-    white_cards = db.relationship("Round_White_Card", backref="round")
+    white_cards = db.relationship("RoundWhiteCard", backref="round")
     # players = db.relationship('Player',
     #                           secondary='round_player',
     #                           backref='round',
@@ -265,7 +279,7 @@ class PlayerCard(db.Model):
         )
 
 
-class Round_White_Card(db.Model):
+class RoundWhiteCard(db.Model):
     __tablename__ = "round_white_card"
     __table_args__ = (
         db.PrimaryKeyConstraint('game_id', 'round_id', 'player_id', 'white_card_id'),

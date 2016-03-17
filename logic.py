@@ -11,7 +11,7 @@ from models import Player
 # from models import PlayerHand
 from models import Room
 from models import Round
-from models import Round_White_Card
+from models import RoundWhiteCard
 # from models import RoundPlayer
 from models import User
 from models import WhiteMasterCard
@@ -63,7 +63,12 @@ def create_new_game(
 def create_new_player(
         user_id, name, game_id
 ):
-    new_player = Player(user_id=user_id, name=name, game_id=game_id)
+    game = Game.query.filter(Game.id == game_id).one()
+    if game is None:
+        raise Exception('Game {0} does not exist.'.format(game_id))
+    new_player = Player(user_id=user_id, name=name)
+    g = game.add_player(new_player);
+    db.session.commit()
 
     db.session.add(new_player)
     db.session.commit()
@@ -91,36 +96,42 @@ def get_game_players(
     return Player.query.filter(Player.game_id == game_id).all()
 
 
-def get_discarded_white_cards():
+def get_discarded_white_cards(game_id):
     """
 
     :return:
     """
     # all cards in common game deck
-    sq1 = db.session.query(WhiteGameCard.card_id)
+    sq1 = db.session.query(WhiteGameCard.card_id).filter(WhiteGameCard.game_id == game_id)
     # all cards currently in a pending round
-    sq2 = db.session.query(Round_White_Card.white_card_id).join(Round).filter(Round.winner_id is None)
+    sq2 = db.session.query(RoundWhiteCard.white_card_id) \
+        .join(Round) \
+        .filter(Round.judge_id is None) \
+        .filter(RoundWhiteCard.game_id == game_id)
     # all cards currently in a player's hand
-    sq3 = db.session.query(PlayerCard.card_id)
+    sq3 = db.session.query(PlayerCard.card_id).filter(PlayerCard.game_id == game_id)
 
     q = db.session.query(WhiteMasterCard) \
         .filter(and_(~WhiteMasterCard.id.in_(sq1), ~WhiteMasterCard.id.in_(sq2), ~WhiteMasterCard.id.in_(sq3)))
     return q
 
 
-def get_in_play_white_cards():
+def get_in_play_white_cards(game_id):
     sq = db.session.query(WhiteMasterCard.id) \
         .join(WhiteGameCard) \
         .join(PlayerCard) \
-        .filter(or_(WhiteMasterCard.id == PlayerCard.card_id, WhiteMasterCard.id == WhiteGameCard.card_id))
+        .filter(or_(and_(WhiteMasterCard.id == PlayerCard.card_id, PlayerCard.game_id == game_id),
+                    and_(WhiteMasterCard.id == WhiteGameCard.card_id, WhiteGameCard.game_id == game_id),
+                    and_(WhiteMasterCard.id == RoundWhiteCard.white_card_id, RoundWhiteCard.game_id == game_id)))
     return sq
 
 
-def get_in_play_black_cards_():
+def get_in_play_black_cards_(game_id):
     sq = db.session.query(BlackMasterCard.id) \
         .join(BlackGameCard) \
         .join(PlayerCard) \
-        .filter(or_(BlackMasterCard.id == PlayerCard.card_id, BlackMasterCard.id == BlackGameCard.card_id))
+        .filter(or_(and_(BlackMasterCard.id == PlayerCard.card_id, PlayerCard.game_id == game_id),
+                    and_(BlackMasterCard.id == BlackGameCard.card_id), BlackGameCard.game_id == game_id))
     return sq
 
 
@@ -144,10 +155,10 @@ def deal_white_cards(
 
 def declare_round_winner(
         game_id,
-        round_num,
+        round_number,
         winner_id
 ):
-    round = Round.query.filter(Round.game_id == game_id, Round.round_number == round_num).one()
+    round = Round.query.filter(Round.game_id == game_id, Round.round_number == round_number).one()
 
     if round.judge_id == winner_id:
         raise Exception('Round judge cannot be winner.')
@@ -227,12 +238,12 @@ def play_white_card(
         pick_num
 ):
     """Check if card is already in play for this round."""
-    rwp = Round_White_Card.query.filter(
-        Round_White_Card.game_id == game_id,
-        Round_White_Card.round_id == round_id,
-        Round_White_Card.player_id == player_id,
-        Round_White_Card.white_card_id == card_id,
-        Round_White_Card.pick_num == pick_num
+    rwp = RoundWhiteCard.query.filter(
+        RoundWhiteCard.game_id == game_id,
+        RoundWhiteCard.round_id == round_id,
+        RoundWhiteCard.player_id == player_id,
+        RoundWhiteCard.white_card_id == card_id,
+        RoundWhiteCard.pick_num == pick_num
     ).first()
 
     """If card is in play throw exception."""
@@ -243,7 +254,7 @@ def play_white_card(
     round = Round.query.filter(Round.game_id == game_id, Round.id == round_id)
 
     """Else play the card for this round."""
-    rwp = Round_White_Card(
+    rwp = RoundWhiteCard(
         game_id=game_id,
         round_id=round_id,
         player_id=player_id,
