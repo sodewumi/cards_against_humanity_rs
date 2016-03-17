@@ -5,12 +5,8 @@ from app import app, requires_login
 from helpers import forms
 from logic import create_new_user, get_user_by_username, get_user_by_email
 
-def render_login():
-    login_form = forms.LoginForm(request.form)
-    return render_template("login.html", login_form=login_form)
 
 @app.route('/')
-@app.route('/index')
 def index():
     return render_template('index.html')
 
