@@ -5,14 +5,14 @@
       {{ create_room_form.hidden_tag() }}
       <p>
           Please enter the room name:<br>
-          {{ create_room_form.room_name(size=80) }}<br>
+          {{ create_room_form.room_name() }}<br>
           {% for error in create_room_form.room_name.errors %}
             <span style="color: red;">[{{ error }}]</span>
           {% endfor %}<br>
       </p>
       <p>
           Please enter players:<br>
-          {{ create_room_form.players(size=80) }}<br>
+          {{ create_room_form.players(class_="form-control") }}<br>
           {% for error in create_room_form.players.errors %}
             <span style="color: red;">[{{ error }}]</span>
           {% endfor %}<br>

@@ -98,6 +98,12 @@ def create_new_round(
     db.session.add(new_round)
     db.session.commit()
 
+def get_all_usernames():
+    return db.session.query(
+        User.username
+    ).order_by(
+        User.username
+    ).all()
 
 # GET
 def get_game_players(

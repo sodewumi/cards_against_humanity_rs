@@ -1,9 +1,9 @@
 from Crypto.Hash import SHA256
-from flask import Flask, flash, redirect, render_template, url_for, request, session
+from flask import Flask, flash, jsonify, redirect, render_template, url_for, request, session
 
 from app import app, requires_login
 from helpers import forms
-from logic import create_new_user, get_user_by_username, get_user_by_email
+from logic import create_new_user, get_all_usernames, get_user_by_username, get_user_by_email
 
 
 @app.route('/')
@@ -77,3 +77,11 @@ def create_room():
         'create_room.html',
         create_room_form=create_room_form,
     )
+
+@app.route('/player_list', methods=['Get'])
+def get_player_list():
+    player_list = []
+    for player in get_all_game_playersget_all_usernames():
+        player_list.append({'value': player[0]})
+
+    return jsonify({'foo': player_list})
