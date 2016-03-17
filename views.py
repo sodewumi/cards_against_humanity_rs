@@ -1,9 +1,13 @@
 from Crypto.Hash import SHA256
 from flask import Flask, flash, redirect, render_template, url_for, request, session
 
-from app import app
+from app import app, requires_login
 from helpers import forms
 from logic import create_new_user, get_user_by_username, get_user_by_email
+
+def render_login():
+    login_form = forms.LoginForm(request.form)
+    return render_template("login.html", login_form=login_form)
 
 @app.route('/')
 @app.route('/index')
@@ -18,7 +22,7 @@ def login():
     if login_form.validate_on_submit():
         flash(u'Successfully logged in as %s' % login_form.user.username)
         session['user_id'] = login_form.user.id
-        return redirect(url_for('index'))
+        return redirect(url_for('create_room'))
     return render_template(
         'login.html',
         login_form=login_form,
@@ -47,15 +51,13 @@ def register_post():
 
         register_password_hashed = SHA256.new(register_password.encode('utf-8')).hexdigest()
 
-
-        if register_email and register_password_hashed and register_username:
-            create_new_user(
-                email=register_email,
-                password=register_password_hashed,
-                username=register_username,
-            )
-            flash('Thanks for creating an account! Please sign in')
-            return redirect('/')
+        create_new_user(
+            email=register_email,
+            password=register_password_hashed,
+            username=register_username,
+        )
+        flash('Thanks for creating an account! Please sign in')
+        return redirect('/login')
     else:
         return render_template(
             'register.html',
@@ -68,3 +70,14 @@ def logout_user():
     session.pop('user_id')
     flash("You've successfully logged out. Goodbye.")
     return redirect("/")
+
+@app.route('/create_room', methods=['Get'])
+@requires_login
+def create_room():
+
+    create_room_form = forms.CreateRoomForm()
+
+    return render_template(
+        'create_room.html',
+        create_room_form=create_room_form,
+    )
