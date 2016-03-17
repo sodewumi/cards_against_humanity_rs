@@ -1,12 +1,14 @@
+import os
+import json
+
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
+
 from models import *
 from sqlalchemy import and_, or_
 
-import os
 
 db = SQLAlchemy()
-
 
 def drop_db():
     """Connect the database to our Flask app."""
@@ -29,7 +31,7 @@ def seed_card_data():
     Seeds master decks for all games
     :return:
     """
-    import os, json
+
     with open('static/cards.json') as data_file:
         try:
             game = json.load(data_file)

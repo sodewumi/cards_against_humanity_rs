@@ -1,4 +1,4 @@
-# Created by randalls at 3/9/16
+# Created by randall and stella at 3/9/16
 
 Feature: Sign Up
   As a user
@@ -14,17 +14,17 @@ Feature: Sign Up
   Scenario: Login as unregistered user
     Given I am an unregistered user
     When I enter my credentials
-    Then I should be redirected to sign up page
+    Then I should be redirected to the login page
 
-  Scenario: Login as registered user
+  Scenario: Successful Login as registered user
     Given I am a registered user
     When I enter my credentials correctly
     Then I should be logged in successfully
 
-  Scenario: Login as registered user
+  Scenario: Unsuccesful Login as registered user
     Given I am a registered user
-    When I enter my credentials correctly
-    Then I should be logged in successfully
+    When I enter my credentials incorrectly
+    Then I should be redirected to the login page
 
 
 Feature: Create Room

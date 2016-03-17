@@ -1,18 +1,22 @@
 {% extends 'base.html' %}
 
 {% block body %}
-
-  <form action="" method="post" name="login">
-      {{ form.hidden_tag() }}
+  <form action="/login" method="post" name="login">
+      {{ login_form.hidden_tag() }}
       <p>
-          Please enter your OpenID:<br>
-          {{ form.openid(size=80) }}<br>
-          {% for error in form.openid.errors %}
+          Please enter your Username:<br>
+          {{ login_form.username(size=80) }}<br>
+          {% for error in login_form.username.errors %}
             <span style="color: red;">[{{ error }}]</span>
           {% endfor %}<br>
       </p>
-      <p>{{ form.remember_me }} Remember Me</p>
-      <p><input type="submit" value="Sign In"></p>
+      <p>
+          Please enter your Password:<br>
+          {{ login_form.password(size=80) }}<br>
+          {% for error in login_form.password.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}<br>
+      </p>
       <p><input type="submit" value="Sign In"></p>
   </form>
 {% endblock %}

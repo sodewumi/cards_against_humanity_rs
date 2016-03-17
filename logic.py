@@ -37,6 +37,16 @@ def create_new_user(
     db.session.add(new_user)
     db.session.commit()
 
+def get_user_by_username(username):
+    return User.query.filter(
+        User.username == username
+    ).first()
+
+def get_user_by_email(email):
+    return User.query.filter(
+        User.email == email
+    ).first()
+
 
 def create_new_room(
         name,
@@ -291,3 +301,4 @@ if __name__ == "__main__":
     from app import app
 
     connect_to_db(app)
+
