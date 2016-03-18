@@ -21,3 +21,21 @@ $.ajax({
     $('#players').tokenfield();
   })
 
+$('#create-room').on('submit', function(evt) {
+
+  if(($('#room_name').val() !== "") && $('div').hasClass('token') ) {
+    usernamesList = []
+    $('.token').map(function() {
+      usernamesList.push($(this).find('span').text());
+    });
+
+    usernames = usernamesList.join(',')
+    $('#players').val(usernames)
+
+    return;
+  }
+
+  evt.preventDefault();
+  console.log("error")
+
+})

@@ -24,9 +24,9 @@ db = SQLAlchemy()
 
 # CREATE
 def create_new_user(
-        email,
-        password,
-        username,
+    email,
+    password,
+    username,
 ):
     new_user = User(
         email=email,
@@ -49,7 +49,7 @@ def get_user_by_email(email):
 
 
 def create_new_room(
-        name,
+    name,
 ):
     new_room = Room(
         name=name,
@@ -57,10 +57,11 @@ def create_new_room(
 
     db.session.add(new_room)
     db.session.commit()
+    return new_room.id
 
 
 def create_new_game(
-        room_id,
+    room_id,
 ):
     new_game = Game(
         room_id=room_id,
@@ -69,9 +70,19 @@ def create_new_game(
     db.session.add(new_game)
     db.session.commit()
 
+    return new_game.id
+
+def get_user_id_by_username(username):
+    return db.session.query(
+        User.id
+    ).filter(
+        User.username == username
+    ).one()
 
 def create_new_player(
-        user_id, name, game_id
+    user_id,
+    name,
+    game_id,
 ):
     game = Game.query.filter(Game.id == game_id).one()
     if game is None:
@@ -80,14 +91,14 @@ def create_new_player(
     g = game.add_player(new_player);
     db.session.commit()
 
-    db.session.add(new_player)
-    db.session.commit()
+    # db.session.add(new_player)
+    # db.session.commit()
 
 
 def create_new_round(
-        game_id,
-        black_card_id,
-        judge_id
+    game_id,
+    black_card_id,
+    judge_id
 ):
     new_round = Round(
         game_id=game_id,
@@ -107,7 +118,7 @@ def get_all_usernames():
 
 # GET
 def get_game_players(
-        game_id
+    game_id
 ):
     return Player.query.filter(Player.game_id == game_id).all()
 
@@ -153,9 +164,9 @@ def get_in_play_black_cards_(game_id):
 
 # MISC
 def deal_white_cards(
-        player_id,
-        game_id,
-        number_of_cards
+    player_id,
+    game_id,
+    number_of_cards,
 ):
     objects = []
     white_cards = WhiteGameCard.query.limit(number_of_cards)
@@ -170,9 +181,9 @@ def deal_white_cards(
 
 
 def declare_round_winner(
-        game_id,
-        round_number,
-        winner_id
+    game_id,
+    round_number,
+    winner_id,
 ):
     round = Round.query.filter(Round.game_id == game_id, Round.round_number == round_number).one()
 
@@ -247,11 +258,11 @@ def initialize_black_game_deck(game_id):
 
 
 def play_white_card(
-        game_id,
-        round_id,
-        player_id,
-        card_id,
-        pick_num
+    game_id,
+    round_id,
+    player_id,
+    card_id,
+    pick_num,
 ):
     """Check if card is already in play for this round."""
     rwp = RoundWhiteCard.query.filter(

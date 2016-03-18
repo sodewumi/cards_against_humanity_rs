@@ -204,10 +204,13 @@ class Game(db.Model):
         )
 
     def add_player(self, player):
+
         if not self.players.filter(Player.user_id == player.user_id).count() == 0:
             raise Exception('User is already in game')
         elif self.players.count() == self.max_num_of_players:
             raise Exception('Max number of players for game reached.')
+
+        player.player_no = self.players.count() + 1
         self.players.append(player)
         print('Player added.' + '{0} player(s) total.'.format(self.players.count()))
 
@@ -258,12 +261,18 @@ class Player(db.Model):
     player_no = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     name = db.Column(db.String(20), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False)
-    cards = db.relationship("PlayerCard",
-                            backref="player",
-                            cascade="all, delete, delete-orphan",
-                            single_parent=True,
-                            lazy='dynamic')
+    game_id = db.Column(
+        db.Integer,
+        db.ForeignKey("game.id"),
+        nullable=False,
+    )
+    cards = db.relationship(
+        "PlayerCard",
+        backref="player",
+        cascade="all, delete, delete-orphan",
+        single_parent=True,
+        lazy='dynamic',
+    )
 
     def __repr__(self):
         return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (

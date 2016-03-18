@@ -4,7 +4,7 @@ from flask import Flask, flash, jsonify, redirect, render_template, url_for, req
 from app import app, requires_login
 from helpers import forms
 from logic import create_new_user, get_all_usernames, get_user_by_username, get_user_by_email
-
+from logic import create_new_room, create_new_game, create_new_player, get_user_id_by_username
 
 @app.route('/')
 def index():
@@ -78,10 +78,27 @@ def create_room():
         create_room_form=create_room_form,
     )
 
+@app.route('/create_room', methods=['Post'])
+def create_room_post():
+    room_name = request.form['room_name']
+    players = request.form['players'].split(',')
+
+    room_id = create_new_room(room_name)
+    game_id = create_new_game(room_id)
+
+    for player in players:
+        create_new_player(
+            user_id=get_user_id_by_username(player),
+            name=player,
+            game_id=game_id,
+        )
+
+    return "Hello World"
+
 @app.route('/player_list', methods=['Get'])
 def get_player_list():
     player_list = []
-    for player in get_all_game_playersget_all_usernames():
+    for player in get_all_usernames():
         player_list.append({'value': player[0]})
 
     return jsonify({'foo': player_list})
