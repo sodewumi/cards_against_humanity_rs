@@ -286,7 +286,7 @@ def play_white_card(
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
-    if os.environ.get('DATABSE_URL') is None:
+    if os.environ.get('DATABASE_URL') is None:
         SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
     else:
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
