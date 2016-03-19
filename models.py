@@ -348,6 +348,8 @@ class RoundWhiteCard(db.Model):
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
+    d = os.environ.get('DATABSE_URL')
+    print(d)
     if os.environ.get('DATABSE_URL') is None:
         SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
     else:

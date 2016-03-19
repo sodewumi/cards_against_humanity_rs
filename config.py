@@ -2,7 +2,6 @@ import os
 
 
 WTF_CSRF_ENABLED = True
-SECRET_KEY = 'you-will-never-guess'
 
 if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
