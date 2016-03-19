@@ -1,7 +1,7 @@
 from Crypto.Hash import SHA256
 from flask import Flask, flash, redirect, render_template, url_for, request, session
 
-from app import app, requires_login
+from app import app
 from helpers import forms
 from logic import create_new_user, get_user_by_username, get_user_by_email
 
