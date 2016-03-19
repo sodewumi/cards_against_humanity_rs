@@ -1,5 +1,9 @@
 from Crypto.Hash import SHA256
 from flask import Flask, flash, redirect, render_template, url_for, request, session
+from flask.ext.login import current_user
+from flask.ext.login import login_required
+from flask.ext.login import login_user
+from flask.ext.login import logout_user
 
 from app import app
 from helpers import forms
@@ -68,7 +72,7 @@ def logout_user():
     return redirect("/")
 
 @app.route('/create_room', methods=['Get'])
-@requires_login
+@login_required
 def create_room():
 
     create_room_form = forms.CreateRoomForm()
