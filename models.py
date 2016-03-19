@@ -94,8 +94,11 @@ class User(db.Model):
 
 class RoomUser(db.Model):
     __tablename__ = 'room_user'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('room_id', 'user_id'),
+    )
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -143,12 +146,11 @@ class BlackGameCard(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     card_id = db.Column(db.Integer, db.ForeignKey('black_master_card.id'))
 
-    # def __repr__(self):
-    #     return "<PlayerCard: id=%d, game_id=%d, card_id=%d>" % (
-    #         self.id,
-    #         self.game_id,
-    #         self.card_id,
-    #     )
+    def __repr__(self):
+        return "<PlayerCard: game_id=%d, card_id=%d>" % (
+            self.game_id,
+            self.card_id,
+        )
 
 
 class WhiteMasterCard(db.Model):
@@ -197,19 +199,22 @@ class Game(db.Model):
     def max_num_of_players(self):
         return 8
 
+    @property
+    def player_slot_available(self):
+        return self.max_num_of_players - self.players.count()
+
     def __repr__(self):
-        return "<Game: id=%d, room_id=%d>" % (
+        return "<Game: id=%d, room_id=%r>" % (
             self.id,
-            self.room_id or 0,
+            self.room_id,
         )
 
     def add_player(self, player):
         if not self.players.filter(Player.user_id == player.user_id).count() == 0:
             raise Exception('User is already in game')
-        elif self.players.count() == self.max_num_of_players:
+        elif not self.player_slot_available:
             raise Exception('Max number of players for game reached.')
         self.players.append(player)
-        print('Player added.' + '{0} player(s) total.'.format(self.players.count()))
 
         return self
 
@@ -230,22 +235,17 @@ class Round(db.Model):
         "BlackMasterCard", backref=db.backref("round", uselist=False)
     )
     white_cards = db.relationship("RoundWhiteCard", backref="round")
-    # players = db.relationship('Player',
-    #                           secondary='round_player',
-    #                           backref='round',
-    #                           # backref=db.backref('recipes', lazy='dynamic'))
-    #                           lazy='dynamic')
 
-    # def __repr__(self):
-    #     return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
-    #         judge_id=%d, winner_id=%s>""" % (
-    #         self.id,
-    #         self.game_id,
-    #         self.round_number,
-    #         self.black_card_id,
-    #         self.judge_id,
-    #         self.winner_id or 'No Winner',
-    #     )
+    def __repr__(self):
+        return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
+            judge_id=%d, winner_id=%r>""" % (
+            self.id,
+            self.game_id,
+            self.round_number,
+            self.black_card_id,
+            self.judge_id,
+            self.winner_id,
+        )
 
 
 class Player(db.Model):
