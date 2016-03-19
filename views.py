@@ -5,7 +5,7 @@ from flask.ext.login import login_required
 from flask.ext.login import login_user
 from flask.ext.login import logout_user
 from app import login_manager
-from .models import User
+from models import User
 
 
 from app import app
