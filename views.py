@@ -4,6 +4,9 @@ from flask.ext.login import current_user
 from flask.ext.login import login_required
 from flask.ext.login import login_user
 from flask.ext.login import logout_user
+from app import login_manager
+from .models import User
+
 
 from app import app
 from helpers import forms
@@ -81,3 +84,8 @@ def create_room():
         'create_room.html',
         create_room_form=create_room_form,
     )
+
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
