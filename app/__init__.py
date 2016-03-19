@@ -5,6 +5,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config.from_object('config')
+app.secret_key = "public for now"
+app.config['SESSION_TYPE'] = 'filesystem'
 import views, models
 db = SQLAlchemy(app)
 
