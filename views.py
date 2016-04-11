@@ -5,6 +5,7 @@ from app import app, requires_login
 from helpers import forms
 from logic import create_new_user, get_all_usernames, get_user_by_username, get_user_by_email
 from logic import create_new_room, create_new_game, create_new_player, get_user_id_by_username
+from logic import deal_white_cards
 
 @app.route('/')
 def index():
@@ -68,7 +69,7 @@ def logout_user():
     return redirect("/")
 
 @app.route('/create_room', methods=['Get'])
-@requires_login
+# @requires_login
 def create_room():
 
     create_room_form = forms.CreateRoomForm()
@@ -78,23 +79,6 @@ def create_room():
         create_room_form=create_room_form,
     )
 
-@app.route('/create_room', methods=['Post'])
-def create_room_post():
-    room_name = request.form['room_name']
-    players = request.form['players'].split(',')
-
-    room_id = create_new_room(room_name)
-    game_id = create_new_game(room_id)
-
-    for player in players:
-        create_new_player(
-            user_id=get_user_id_by_username(player),
-            name=player,
-            game_id=game_id,
-        )
-
-    return "Hello World"
-
 @app.route('/player_list', methods=['Get'])
 def get_player_list():
     player_list = []
@@ -102,3 +86,69 @@ def get_player_list():
         player_list.append({'value': player[0]})
 
     return jsonify({'foo': player_list})
+
+@app.route('/create_room', methods=['Post'])
+def create_room_post():
+    # room_name = request.form['room_name']
+    # players = request.form['players'].split(',')
+
+    # room_id = create_new_room(room_name)
+    # game_id = create_new_game(room_id)
+
+    # for player in players:
+    #     create_new_player(
+    #         user_id=get_user_id_by_username(player),
+    #         name=player,
+    #         game_id=game_id,
+    #     )
+
+    # remove later
+    from models import Player
+    player1 = Player.query.filter(Player.id==1).one()
+    player2 = Player.query.filter(Player.id==2).one()
+    player3 = Player.query.filter(Player.id==3).one()
+    player4 = Player.query.filter(Player.id==4).one()
+
+    players = [player1, player2, player3, player4]
+
+
+    deal_white_cards(player1.id, 1, 10)
+    deal_white_cards(player2.id, 1, 10)
+    deal_white_cards(player3.id, 1, 10)
+    deal_white_cards(player4.id, 1, 10)
+
+    # session['player_data'] = {}
+    # for i, player in enumerate(players):
+    #     print(session, "############")
+    #     session['player_data'][player.name] = session['player_data'].get(player.id, player.cards.all())
+
+    return redirect(url_for('game_room'))
+
+def enabled_categories():
+    from models import PlayerCard
+    print(PlayerCard.query.filter(PlayerCard.card_id<11).all(), "####################")
+    return PlayerCard.query.filter(PlayerCard.card_id<11).all()
+@app.route('/game_room')
+def game_room():
+    from models import Player
+    player1 = Player.query.filter(Player.id==1).one()
+    player2 = Player.query.filter(Player.id==2).one()
+    player3 = Player.query.filter(Player.id==3).one()
+    player4 = Player.query.filter(Player.id==4).one()
+
+    players = [player1, player2, player3, player4]
+
+    players_card_choice_form = forms.PlayersCardChoiceForm(obj=player1)
+    # players_card_choice_form.my_field.choices = enabled_categories()
+
+    return render_template(
+        "game_room.html",
+        players=players,
+        players_card_choice_form = players_card_choice_form,
+    )
+
+
+
+@app.route('/play_hand', methods=['Post'])
+def play_hand():
+    pass

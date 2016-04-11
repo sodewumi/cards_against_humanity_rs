@@ -13,4 +13,7 @@ module.exports = {
     module: {
 
     },
+    resolve: {
+        modulesDirectories: ['./', 'node_modules']
+    }
 };

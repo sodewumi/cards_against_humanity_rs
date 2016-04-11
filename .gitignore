@@ -2,5 +2,7 @@
 /env
 *.pyc
 /.idea
-/static/node_modules
+/node_modules
 secrets.sh
+__pycache__
+npm-debug.log

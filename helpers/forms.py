@@ -1,6 +1,7 @@
 from flask.ext.wtf import Form
-from wtforms import StringField, TextField, PasswordField, BooleanField
+from wtforms import HiddenField, StringField, TextField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
+from wtforms_alchemy import ModelForm
 from models import User
 from logic import create_new_user, get_user_by_username, get_user_by_email
 
@@ -102,3 +103,18 @@ class CreateRoomForm(Form):
 
         return True
 
+
+
+class PlayersCardChoiceForm(ModelForm):
+
+    player_id = HiddenField('player_id')
+    game_id = HiddenField('game_id')
+    choices = HiddenField('choices')
+
+
+    def validate(self):
+        rv = Form.validate(self)
+        if not rv:
+            return False
+
+        return True   
