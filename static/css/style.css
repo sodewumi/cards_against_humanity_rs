@@ -17,12 +17,10 @@ submit {
 	min-height: 45px;
 }
 
-.card--white .card {
+.foo button {
+	/*display: */
 	background-color: rgb(254,254,254);
-}
-
-.card--white .card:last-child {
-	margin-bottom: 20px;
+	border-radius: 3px;
 }
 
 .card--czar .card {
@@ -71,4 +69,37 @@ submit {
 	-webkit-box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
 	-moz-box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
 	box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
+}
+
+
+/*media queries*/
+@media (min-width: 0) {
+	.foo {
+		padding-left: 0;
+		padding-right: 0;
+	}
+	.foo button {
+		min-height: 70px;
+	}
+	.bar {
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+	}
+
+}
+
+/* Large devices (desktops, 62em and up)*/
+@media (min-width: 62em) {
+	.foo {
+		padding-left: 15px;
+		padding-right: 15px;
+	}
+
+	.foo button {
+		min-height: 150px;
+	}
+	.row .row {
+		margin: 0 -30px;
+	}
 }
