@@ -1,22 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="static/main.js"></script>
+    <!-- Bootstrap styling for Typeahead -->
+    <link href="static/css/tokenfield-typeahead.min.css" type="text/css" rel="stylesheet">
+    <!-- Tokenfield CSS -->
+    <link href="static/css/bootstrap-tokenfield.min.css" type="text/css" rel="stylesheet">
     <title>Cards Against Humanity</title>
 </head>
 <body>
-<nav class="navbar navbar-default" role="navigation">
-  <ul class="nav navbar-nav navbar-right">
-    {% if session.get('user_id') %}
-	    <li><a href="/logout">Signout</a></li>
-    {% else %}
-    	<li><a href="/login">Login</a></li>
-    {% endif %}
-  </ul>
-</nav>
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Cards Against Humanity</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            {% if session.get('user_id') %}
+                <li><a href="#">Current Rooms</a></li>
+            {% endif %}
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+            {% if session.get('user_id') %}
+                <li><a href="/logout">Signout</a></li>
+            {% else %}
+                <li><a href="/login">Login</a></li>
+                <li><a href="#">Sign Up</a></li>
+            {% endif %}
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
     <div class="container-fluid">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -31,5 +57,10 @@
     </div>
     {% block body %}
     {% endblock %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="static/js/typeahead.bundle.min.js"></script>
+    <script src="static/js/bootstrap-tokenfield.min.js"></script>
+    <script src="static/js/main.js"></script>
 </body>
 </html>

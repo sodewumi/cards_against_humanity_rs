@@ -1,0 +1,105 @@
+body {
+	background-color: rgb(190,190,190);
+	color: rgb(0,0,0);
+	padding-top: 65px;
+}
+
+input,
+button,
+submit {
+	border:none;
+} 
+
+.card {
+	border-radius: 3px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	min-height: 45px;
+}
+
+.foo button {
+	/*display: */
+	background-color: rgb(254,254,254);
+	border-radius: 3px;
+}
+
+.card--czar .card {
+	background-color: rgb(63,63,63);
+	color: rgb(254,254,254);
+}
+
+.card--status .card {
+	background-color: rgb(126,89,89);
+	color: rgb(254,254,254);
+}
+
+.aligner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.czar-choice-input button{
+	width: 100%;
+	color: rgb(254,254,254);
+	border-radius: 3px;
+	min-height: 40px;
+	background-color: rgb(126,89,89);
+}
+
+.czar-choice-input {
+	padding-left: 0;
+	padding-right: 0;
+	margin-bottom: 20px;
+}
+
+.pd {
+	padding-left: 0;
+	padding-right: 0;
+	text-align: right;
+}
+
+/*navbar*/
+.navbar-default {
+	border: 1px solid rgb(254,254,254);
+	background-color: rgb(254,254,254);
+}
+
+.navbar {
+	-webkit-box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
+	-moz-box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
+	box-shadow: 10px 10px 25px -5px rgba(0,0,0,0.59);
+}
+
+
+/*media queries*/
+@media (min-width: 0) {
+	.foo {
+		padding-left: 0;
+		padding-right: 0;
+	}
+	.foo button {
+		min-height: 70px;
+	}
+	.bar {
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+	}
+
+}
+
+/* Large devices (desktops, 62em and up)*/
+@media (min-width: 62em) {
+	.foo {
+		padding-left: 15px;
+		padding-right: 15px;
+	}
+
+	.foo button {
+		min-height: 150px;
+	}
+	.row .row {
+		margin: 0 -30px;
+	}
+}

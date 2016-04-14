@@ -32,7 +32,7 @@ def seed_card_data():
     :return:
     """
 
-    with open('static/cards.json') as data_file:
+    with open('static/js/cards.json') as data_file:
         try:
             game = json.load(data_file)
             for black_card in game['blackCards']:
@@ -219,13 +219,29 @@ def play_white_card(
 
 
 def seed_user_data():
-    u1 = User(email='randall@you.com', username='randall', password='12345')
+    u1 = User(
+        email='randall@you.com',
+        username='randall',
+        password=SHA256.new('12345'.encode('utf-8')).hexdigest(),
+    )
     db.session.add(u1)
-    u2 = User(email='stella@you.com', username='stella', password='12345')
+    u2 = User(
+        email='stella@you.com',
+        username='stella',
+        password=SHA256.new('12345'.encode('utf-8')).hexdigest(),
+    )
     db.session.add(u2)
-    u3 = User(email='robo1@you.com', username='robo1', password='12345')
+    u3 =  User(
+        email='robo1@you.com',
+        username='robo1',
+        password=SHA256.new('12345'.encode('utf-8')).hexdigest(),
+    )
     db.session.add(u3)
-    u4 = User(email='robo2@you.com', username='robo2', password='12345')
+    u4 = User(
+        email='robo2@you.com',
+        username='robo2',
+        password=SHA256.new('12345'.encode('utf-8')).hexdigest(),
+    )
     db.session.add(u4)
     db.session.commit()
 

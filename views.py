@@ -1,4 +1,5 @@
 from Crypto.Hash import SHA256
+
 from flask import Flask, flash, redirect, render_template, url_for, request, session, jsonify
 from flask.ext.login import current_user
 from flask.ext.login import login_required
@@ -6,11 +7,11 @@ from flask.ext.login import login_user
 from flask.ext.login import logout_user
 from app import login_manager
 from models import *
-# User, Game, Player
+from flask import Flask, flash, jsonify, redirect, render_template, url_for, request, session
 
 
 from app import app
-from helpers import forms
+from app.helpers import forms
 from logic import get_user_by_username, get_user_by_email, get_users, get_user_by_id
 from logic import get_game, get_games, get_round, get_player, get_hand, get_room
 from logic import play_white_card, deal_white_cards, declare_round_winner, replenish_white_deck, replenish_black_deck
@@ -204,12 +205,14 @@ def _replenish_black_deck(game_id):
     return jsonify({'black_game_cards': black_game_cards})
 
 
-
-
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+
+from logic import create_new_user, get_all_usernames, get_user_by_username, get_user_by_email
+from logic import create_new_room, create_new_game, create_new_player, get_user_id_by_username
+from logic import deal_white_cards
 
 @app.route('/')
 def index():
@@ -276,7 +279,8 @@ def logout_user():
 
 
 @app.route('/create_room', methods=['Get'])
-@login_required
+
+# @requires_login
 def create_room():
     create_room_form = forms.CreateRoomForm()
 
@@ -286,6 +290,79 @@ def create_room():
     )
 
 
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+
+# @login_manager.user_loader
+# def load_user(id):
+#     return User.query.get(int(id))
+
+@app.route('/player_list', methods=['Get'])
+def get_player_list():
+    player_list = []
+    for player in get_all_usernames():
+        player_list.append({'value': player[0]})
+
+    return jsonify({'foo': player_list})
+
+@app.route('/create_room', methods=['Post'])
+def create_room_post():
+    # room_name = request.form['room_name']
+    # players = request.form['players'].split(',')
+
+    # room_id = create_new_room(room_name)
+    # game_id = create_new_game(room_id)
+
+    # for player in players:
+    #     create_new_player(
+    #         user_id=get_user_id_by_username(player),
+    #         name=player,
+    #         game_id=game_id,
+    #     )
+
+    # remove later
+    from models import Player
+    player1 = Player.query.filter(Player.id==1).one()
+    player2 = Player.query.filter(Player.id==2).one()
+    player3 = Player.query.filter(Player.id==3).one()
+    player4 = Player.query.filter(Player.id==4).one()
+
+    players = [player1, player2, player3, player4]
+
+
+    deal_white_cards(player1.id, 1, 10)
+    deal_white_cards(player2.id, 1, 10)
+    deal_white_cards(player3.id, 1, 10)
+    deal_white_cards(player4.id, 1, 10)
+
+    # session['player_data'] = {}
+    # for i, player in enumerate(players):
+    #     print(session, "############")
+    #     session['player_data'][player.name] = session['player_data'].get(player.id, player.cards.all())
+
+    return redirect(url_for('game_room'))
+
+def enabled_categories():
+    from models import PlayerCard
+    print(PlayerCard.query.filter(PlayerCard.card_id<11).all(), "####################")
+    return PlayerCard.query.filter(PlayerCard.card_id<11).all()
+@app.route('/game_room')
+def game_room():
+    from models import Player
+    player1 = Player.query.filter(Player.id==1).one()
+    player2 = Player.query.filter(Player.id==2).one()
+    player3 = Player.query.filter(Player.id==3).one()
+    player4 = Player.query.filter(Player.id==4).one()
+
+    players = [player1, player2, player3, player4]
+
+    players_card_choice_form = forms.PlayersCardChoiceForm(obj=player1)
+    # players_card_choice_form.my_field.choices = enabled_categories()
+
+    return render_template(
+        "game.html",
+        players=players,
+        players_card_choice_form = players_card_choice_form,
+    )
+
+@app.route('/play_hand', methods=['Post'])
+def play_hand():
+    pass

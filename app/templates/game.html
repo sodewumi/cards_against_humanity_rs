@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block body %}
+	<link rel="stylesheet" href="../static/css/style.css">
+	<div class="container-fluid">
+
+		<div class="row card--czar">
+			<div class="col-xs-offset-1 col-xs-10 col-md-2 text-center card aligner">
+				Name of the card
+			</div>		
+		</div>
+
+		<div class="row card--status">
+			<div class="col-xs-offset-1 col-xs-10 col-md-2 text-center card aligner">
+				Card Czar
+			</div>	
+		</div>
+
+		<div class="row">
+			<div class="col-xs-offset-1 col-xs-10">
+			  <div class="row card--white">
+			    {% for i in range(10) %}
+			    <div class="col-sm-12 col-xs-12 col-md-4 col-lg-3 text-center card foo aligner">
+					<button class="bar">
+						{{ players[0].cards[i]}}
+					</button>
+			    </div>
+			    {% endfor %}
+			  </div>
+			</div>	
+		</div>
+
+		<form action="/play_hand" method="post" name="play-hand">
+
+			{% for field in players_card_choice_form %}
+	            {{ field }}
+	        {% endfor %}
+
+			<div class="row">
+				<div class="col-xs-offset-1 col-xs-10 col-md-offset-8 col-md-3 czar-choice-input">
+					<button type="submit">Choose Winner</button>
+				</div>	
+			</div>
+		</form>
+
+		<div class="row">
+			<p class="col-xs-offset-1 col-xs-10 col-md-offset-8 col-md-3 pd">
+				Your Score: 10
+			</p>			
+		</div>
+		<div class="row">
+			<p class="col-xs-offset-1 col-xs-10 col-md-offset-8 col-md-3 pd">
+				Current Winner: Randall
+			</p>
+		</div>
+	</div>
+{% endblock %}

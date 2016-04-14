@@ -250,10 +250,13 @@ class Game(db.Model):
     #     )
 
     def add_player(self, player):
+
         if not self.players.filter(Player.user_id == player.user_id).count() == 0:
             raise Exception('User is already in game')
         elif not self.player_slot_available:
             raise Exception('Max number of players for game reached.')
+
+        player.player_no = self.players.count() + 1
         self.players.append(player)
 
         return self
@@ -281,7 +284,7 @@ class Round(db.Model):
         return url_for('round', id=self.id)
 
     def __repr__(self):
-        return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
+        return """<Round: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
             judge_id=%d, winner_id=%r>""" % (
             self.id,
             self.game_id,
