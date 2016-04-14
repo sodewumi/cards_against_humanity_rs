@@ -74,6 +74,10 @@ class User(db.Model):
     username = db.Column(db.String(15), nullable=False, unique=True)
     password = db.Column(db.String(), nullable=False)
 
+    @property
+    def url(self):
+        return url_for('user', id=self.id)
+
     def is_authenticated(self):
         return True
 
@@ -119,6 +123,9 @@ class Room(db.Model):
                             backref='room',
                             # backref=db.backref('recipes', lazy='dynamic'))
                             lazy='dynamic')
+    @property
+    def url(self):
+        return url_for('room', id=self.id)
 
     def __repr__(self):
         return "<Room: id=%d, name=%s>" % (
@@ -133,6 +140,10 @@ class BlackMasterCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200))
     pick_number = db.Column(db.Integer)
+
+    @property
+    def url(self):
+        return url_for('black_master_card', id=self.id)
 
     def __repr__(self):
         return "<PlayerCard: id=%d, text=%s, pick_number=%d>" % (
@@ -164,6 +175,10 @@ class WhiteMasterCard(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(200))
+
+    @property
+    def url(self):
+        return url_for('white_master_card', id=self.id)
 
     def __repr__(self):
         return "<WhiteMasterCard: id=%d, text=%s>" % (
@@ -206,6 +221,10 @@ class Game(db.Model):
                              cascade="all, delete, delete-orphan",
                              single_parent=True,
                              lazy='dynamic')
+
+    @property
+    def url(self):
+        return url_for('game', id=self.id)
 
     @property
     def max_num_of_players(self):
@@ -256,6 +275,10 @@ class Round(db.Model):
         "BlackMasterCard", backref=db.backref("round", uselist=False)
     )
     white_cards = db.relationship("RoundWhiteCard", backref="round")
+
+    @property
+    def url(self):
+        return url_for('round', id=self.id)
 
     def __repr__(self):
         return """<User: id=%d, game_id=%d, round_number=%d, black_card_id=%d,
@@ -310,7 +333,7 @@ class Player(db.Model):
 
     @property
     def url(self):
-        return url_for('book', id=self.id)
+        return url_for('player', id=self.id)
 
     @property
     def hand(self):

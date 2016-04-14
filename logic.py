@@ -149,7 +149,10 @@ def get_game_players(game_id):
 
 
 def get_round(game_id, round_number):
-    return Round.query.filter(Round.game_id == game_id, Round.round_number == round_number).one()
+    # return Round.query.filter(Round.game_id == game_id, Round.round_number == round_number).one()
+    round_schema = RoundSchema()
+    round = Round.query.filter(Round.game_id == game_id, Round.round_number==round_number).one()
+    return round_schema.dump(round).data
 
 
 def get_players(game_id):
