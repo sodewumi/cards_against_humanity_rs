@@ -13,7 +13,7 @@ db = SQLAlchemy()
 def drop_db():
     """Connect the database to our Flask app."""
     from app import app
-    if os.environ.get('DATABSE_URL') is None:
+    if os.environ.get('DATABASE_URL') is None:
         SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
     else:
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
@@ -333,7 +333,7 @@ def declare_round_winner(
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
-    if os.environ.get('DATABSE_URL') is None:
+    if os.environ.get('DATABASE_URL') is None:
         SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
     else:
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
@@ -346,5 +346,5 @@ def connect_to_db(app):
 
 if __name__ == "__main__":
     from app import app
-
+    from models import *
     connect_to_db(app)

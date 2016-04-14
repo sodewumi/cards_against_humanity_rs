@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from sqlalchemy import and_, or_
 import os
 
@@ -16,10 +17,12 @@ from models import RoundWhiteCard
 from models import User
 from models import WhiteMasterCard
 from models import WhiteGameCard
+from models import GameSchema, PlayerSchema, RoomSchema, RoundSchema, WhiteMasterCard, BlackCardSchema, UserSchema
 from seed import connect_to_db
 from app import app
 
 db = SQLAlchemy()
+ma = Marshmallow()
 
 
 # CREATE
@@ -37,23 +40,35 @@ def create_new_user(
     db.session.add(new_user)
     db.session.commit()
 
-def get_user_by_username(username):
-    return User.query.filter(
-        User.username == username
-    ).first()
+
+def get_user_by_username(user_name):
+    user_schema = UserSchema()
+    user = User.query.filter(User.username == user_name).one()
+    return user_schema.dump(user).data
+
 
 def get_user_by_email(email):
-    return User.query.filter(
-        User.email == email
-    ).first()
+    user_schema = UserSchema()
+    user = User.query.filter(User.email == email).one()
+    return user_schema.dump(user).data
+
+
+def get_user_by_id(_id):
+    user_schema = UserSchema()
+    user = User.query.filter(User.id == _id).one()
+    return user_schema.dump(user).data
+
+
+def get_users():
+    users_schema = UserSchema(many=True)
+    users = Game.query.all()
+    return users_schema.dump(users).data
 
 
 def create_new_room(
     name,
 ):
-    new_room = Room(
-        name=name,
-    )
+    new_room = Room(name=name, )
 
     db.session.add(new_room)
     db.session.commit()
@@ -97,9 +112,10 @@ def create_new_player(
 
 def create_new_round(
     game_id,
-    black_card_id,
     judge_id
 ):
+    black_card_id = BlackGameCard.query.first().card_id
+
     new_round = Round(
         game_id=game_id,
         black_card_id=black_card_id,
@@ -108,6 +124,62 @@ def create_new_round(
 
     db.session.add(new_round)
     db.session.commit()
+
+    return new_round.round_number
+
+
+# GET
+def get_rooms():
+    rooms_schema = RoomSchema(many=True)
+    rooms = Room.query.all()
+    return rooms_schema.dump(rooms).data
+
+
+def get_room(room_id):
+    room_schema = RoomSchema()
+    room = Room.query.filter(Room.id == room_id).first()
+    return room_schema.dump(room).data
+
+
+def get_games():
+    games_schema = GameSchema(many=True)
+    games = Game.query.all()
+    return games_schema.dump(games).data
+
+
+def get_game(game_id):
+    game_schema = GameSchema()
+    game = Game.query.filter(Game.id == game_id).one()
+    return game_schema.dump(game).data
+
+
+def get_game_players(game_id):
+    players_schema = PlayerSchema(many=True)
+    players = Player.query.filter(Player.game_id == game_id).all()
+    return players_schema.dump(players).data
+
+
+def get_round(game_id, round_number):
+    # return Round.query.filter(Round.game_id == game_id, Round.round_number == round_number).one()
+    round_schema = RoundSchema()
+    round = Round.query.filter(Round.game_id == game_id, Round.round_number==round_number).one()
+    return round_schema.dump(round).data
+
+
+def get_players(game_id):
+    players_schema = PlayerSchema(many=True)
+    players = Player.query.filter(Player.game_id == game_id).all()
+    return players_schema.dump(players).data
+
+
+def get_player(game_id, player_id):
+    player_schema = PlayerSchema()
+    player = Player.query.filter(Player.game_id == game_id, Player.id == player_id).one()
+    return player_schema.dump(player).data
+
+
+def get_hand(game_id, player_id):
+    return Player.query.filter(Player.game_id == game_id, Player.id == player_id).first().cards.all()
 
 def get_all_usernames():
     return db.session.query(
@@ -121,6 +193,7 @@ def get_game_players(
     game_id
 ):
     return Player.query.filter(Player.game_id == game_id).all()
+
 
 
 def get_discarded_white_cards(game_id):
@@ -246,15 +319,15 @@ def replenish_black_deck(game_id):
     db.session.commit()
 
 
-def initialize_black_game_deck(game_id):
-    """Initializes new white card deck for a game."""
-    black_cards = BlackMasterCard.query.all()
-    for black_card in black_cards:
-        db.session.add(
-            BlackGameCard(game_id=game_id, card_id=black_card.card_id)
-        )
-
-    db.session.commit()
+# def initialize_black_game_deck(game_id):
+#     """Initializes new white card deck for a game."""
+#     black_cards = BlackMasterCard.query.all()
+#     for black_card in black_cards:
+#         db.session.add(
+#             BlackGameCard(game_id=game_id, card_id=black_card.card_id)
+#         )
+#
+#     db.session.commit()
 
 
 def play_white_card(
@@ -303,13 +376,14 @@ def play_white_card(
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
-    if os.environ.get('DATABSE_URL') is None:
+    if os.environ.get('DATABASE_URL') is None:
         SQLALCHEMY_DATABASE_URI = os.environ['LOCAL_DATABASE_URI']
     else:
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
     app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
+    ma.app = app
     db.init_app(app)
     db.create_all()
 
@@ -318,4 +392,3 @@ if __name__ == "__main__":
     from app import app
 
     connect_to_db(app)
-
