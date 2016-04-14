@@ -5,3 +5,6 @@
 /static/node_modules
 secrets.sh
 models_.py
+db_repository/
+foo.txt
+tmp/

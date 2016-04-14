@@ -330,5 +330,5 @@ def connect_to_db(app):
 
 if __name__ == "__main__":
     from app import app
-
+    from models import *
     connect_to_db(app)

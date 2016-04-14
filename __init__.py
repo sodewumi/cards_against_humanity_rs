@@ -2,11 +2,13 @@ import os
 
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
 app.config.from_object('config')
-import views, models
+# import views, models
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 
 if not app.debug and os.environ.get('HEROKU') is None:
     import logging

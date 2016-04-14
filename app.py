@@ -1,6 +1,8 @@
 from flask import Flask, flash, request, url_for, redirect, session
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user
 from functools import wraps
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 
 from models import connect_to_db, User
 

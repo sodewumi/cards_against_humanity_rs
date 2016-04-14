@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
+from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -11,8 +12,9 @@ app.config['SESSION_TYPE'] = 'filesystem'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-import views, models
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
+import views, models
 
 if not app.debug and os.environ.get('HEROKU') is None:
     import logging

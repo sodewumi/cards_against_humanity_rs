@@ -1,11 +1,17 @@
+import json
 from Crypto.Hash import SHA256
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint
-from flask import Flask
+from flask import Flask, url_for
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from marshmallow_sqlalchemy import ModelSchema
+from flask_marshmallow.sqla import HyperlinkRelated
+from app import app
 
 import os
 
 db = SQLAlchemy()
+ma = Marshmallow()
 
 
 # game_player = db.Table('game_player',
@@ -195,6 +201,12 @@ class Game(db.Model):
                               single_parent=True,
                               lazy='dynamic')
 
+    rounds = db.relationship("Round",
+                             backref="game",
+                             cascade="all, delete, delete-orphan",
+                             single_parent=True,
+                             lazy='dynamic')
+
     @property
     def max_num_of_players(self):
         return 8
@@ -203,11 +215,20 @@ class Game(db.Model):
     def player_slot_available(self):
         return self.max_num_of_players - self.players.count()
 
-    def __repr__(self):
-        return "<Game: id=%d, room_id=%r>" % (
-            self.id,
-            self.room_id,
-        )
+    # @property
+    # def json(self):
+    #     print (to_json(self, self.__class__))
+    #     return to_json(self, self.__class__)
+
+    # @property
+    # def url(self):
+    #     return url_for('game', id=self.id)
+
+    # def __repr__(self):
+    #     return "<Game: id=%d, room_id=%r>" % (
+    #         self.id,
+    #         self.room_id,
+    #     )
 
     def add_player(self, player):
         if not self.players.filter(Player.user_id == player.user_id).count() == 0:
@@ -248,32 +269,6 @@ class Round(db.Model):
         )
 
 
-class Player(db.Model):
-    __tablename__ = "player"
-    # __table_args__ = (
-    #     db.UniqueConstraint('id', 'game_id', 'user_id', 'player_no'),
-    # )
-
-    id = db.Column(db.Integer, primary_key=True)
-    player_no = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    name = db.Column(db.String(20), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False)
-    cards = db.relationship("PlayerCard",
-                            backref="player",
-                            cascade="all, delete, delete-orphan",
-                            single_parent=True,
-                            lazy='dynamic')
-
-    def __repr__(self):
-        return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (
-            self.id,
-            self.user_id,
-            self.name,
-            self.game_id,
-        )
-
-
 class PlayerCard(db.Model):
     """Specifies which hand a player has"""
 
@@ -292,6 +287,41 @@ class PlayerCard(db.Model):
             self.game_id,
             self.card_id,
             self.player_id,
+        )
+
+
+class Player(db.Model):
+    __tablename__ = "player"
+    # __table_args__ = (
+    #     db.UniqueConstraint('id', 'game_id', 'user_id', 'player_no'),
+    # )
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_no = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    name = db.Column(db.String(20), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False)
+    cards = db.relationship('WhiteMasterCard',
+                            secondary='player_card',
+                            backref="player",
+                            cascade="all, delete, delete-orphan",
+                            single_parent=True,
+                            lazy='dynamic')
+
+    @property
+    def url(self):
+        return url_for('book', id=self.id)
+
+    @property
+    def hand(self):
+        return self.cards.all()
+
+    def __repr__(self):
+        return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (
+            self.id,
+            self.user_id,
+            self.name,
+            self.game_id,
         )
 
 
@@ -321,6 +351,91 @@ class RoundWhiteCard(db.Model):
             self.white_card_id,
             self.pick_num
         )
+
+
+# def to_json(inst, cls):
+#     """
+#     Jsonify the sql alchemy query result.
+#     """
+#     convert = dict()
+#     # add your coversions for things like datetime's
+#     # and what-not that aren't serializable.
+#     d = dict()
+#     for c in cls.__table__.columns:
+#         v = getattr(inst, c.name)
+#         if c.type in convert.keys() and v is not None:
+#             try:
+#                 d[c.name] = convert[c.type](v)
+#             except:
+#                 d[c.name] = "Error:  Failed to covert using ", str(convert[c.type])
+#         elif v is None:
+#             d[c.name] = str()
+#         else:
+#             d[c.name] = v
+#     print(d)
+#     return json.dumps(d)
+
+
+class UserSchema(ma.ModelSchema):
+    class Meta:
+        model = User
+        fields = ("id", "email", "username",)
+        exclude = ("password",)
+
+    author = HyperlinkRelated('author')
+
+
+class RoomSchema(ma.ModelSchema):
+    class Meta:
+        model = Room
+
+
+class RoomUserSchema(ma.ModelSchema):
+    class Meta:
+        model = RoomUser
+
+
+class GameSchema(ma.ModelSchema):
+    class Meta:
+        model = Game
+
+        # players = ma.List(HyperlinkRelated('player'))
+
+    players = ma.URLFor(
+        '_get_game_players', game_id='<id>',
+        url_kwargs={'game_id': '<game_id>'},
+        # Include resource linkage
+        many=True, include_data=True,
+        type_='players'
+    )
+
+    # _links = ma.Hyperlinks({
+    #     'self': ma.URLFor('car_detail', id='<id>'),
+    #     'start': ma.URLFor('car_start', id='<id>')
+    #     'stop': ma.URLFor('car_start', id='<id>')
+    # })
+
+
+class WhiteMasterCard(ma.ModelSchema):
+    class Meta:
+        model = WhiteMasterCard
+
+
+class PlayerSchema(ma.ModelSchema):
+    class Meta:
+        model = Player
+
+    cards = ma.Nested(WhiteMasterCard, many=True)
+
+
+class RoundSchema(ma.ModelSchema):
+    class Meta:
+        model = Round
+
+
+class BlackCardSchema(ma.ModelSchema):
+    class Meta:
+        model = BlackGameCard
 
 
 # class Hand(db.Model):
@@ -355,6 +470,7 @@ def connect_to_db(app):
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
     app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
+    ma.app = app
     db.init_app(app)
     db.create_all()
 
