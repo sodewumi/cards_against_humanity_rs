@@ -8,6 +8,8 @@ Flask-Restless==0.17.0
 Flask-SQLAlchemy==2.1
 Flask-WTF==0.12
 gunicorn==19.4.5
+infinity==1.4
+intervals==0.7.1
 itsdangerous==0.24
 Jinja2==2.8
 lazy-object-proxy==1.2.1
@@ -24,8 +26,12 @@ python-mimeparse==1.5.1
 six==1.10.0
 SQLAlchemy==1.0.12
 sqlalchemy-migrate==0.10.0
+SQLAlchemy-Utils==0.32.1
 sqlparse==0.1.19
 Tempita==0.5.2
+validators==0.10
 Werkzeug==0.11.4
 wrapt==1.10.6
 WTForms==2.1
+WTForms-Alchemy==0.15.0
+WTForms-Components==0.10.0

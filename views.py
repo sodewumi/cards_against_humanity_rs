@@ -1,106 +1,202 @@
-from Crypto.Hash import SHA256
-
-from flask import Flask, flash, redirect, render_template, url_for, request, session, jsonify
-from flask.ext.login import current_user
-from flask.ext.login import login_required
-from flask.ext.login import login_user
-from flask.ext.login import logout_user
-from app import login_manager
-from models import *
-from flask import Flask, flash, jsonify, redirect, render_template, url_for, request, session
-
-
 from app import app
 from app.helpers import forms
-from logic import get_user_by_username, get_user_by_email, get_users, get_user_by_id
-from logic import get_game, get_games, get_round, get_player, get_hand, get_room
-from logic import play_white_card, deal_white_cards, declare_round_winner, replenish_white_deck, replenish_black_deck
-from logic import create_new_game, create_new_room, create_new_user, create_new_player, create_new_round
-from logic import get_game_players
-from flask import make_response
 from flask import abort
-from flask.ext.restless import APIManager
+from flask import flash, jsonify, redirect, render_template, url_for, request, session
+from flask import make_response
+from logic import create_new_round
+from logic import get_game, get_games, get_round, get_player, get_rounds
+from logic import get_game_players, get_black_game_cards, get_black_master_cards, get_black_master_card, \
+    get_player_cards, get_rooms, get_room, get_white_master_cards, get_white_master_card
+from logic import get_users, get_user_by_id
+from logic import play_white_card, declare_round_winner, replenish_white_deck, replenish_black_deck
+from models import *
+from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.wrappers import Response
 
 
 @app.route('/cah/api/v1.0/users', methods=['GET'])
 def _get_users():
-    users = get_users()
-    if users is None:
+    try:
+        users = get_users()
+    except NoResultFound:
         abort(404)
     return jsonify({'users': users})
 
 
 @app.route('/cah/api/v1.0/users/<int:_id>', methods=['GET'])
 def _get_user_by_id(_id):
-    user = get_user_by_id(_id=_id)
-    if user is None:
+    try:
+        user = get_user_by_id(_id=_id)
+    except NoResultFound:
         abort(404)
+
     return jsonify({'user': user})
+
+
+@app.route('/cah/api/v1.0/rooms', methods=['GET'])
+def _get_rooms():
+    try:
+        rooms = get_rooms()
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'rooms': rooms})
+
+
+@app.route('/cah/api/v1.0/rooms/<int:room_id>', methods=['GET'])
+def _get_room(room_id):
+    try:
+        room = get_room(room_id=room_id)
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'room': room})
 
 
 @app.route('/cah/api/v1.0/users/<string:user_name>', methods=['GET'])
 def _get_user(user_name):
-    user = get_user_by_username(user_name=user_name)
-    if user is None:
+    try:
+        user = get_user_by_username(user_name=user_name)
+    except NoResultFound:
         abort(404)
+
     return jsonify({'user': user})
 
 
 @app.route('/cah/api/v1.0/users/<string:email>', methods=['GET'])
 def _get_user_by_email(email):
-    user = get_user_by_email(email=email)
-    if user is None:
+    try:
+        user = get_user_by_email(email=email)
+    except NoResultFound:
         abort(404)
+
     return jsonify({'user': user})
 
 
 @app.route('/cah/api/v1.0/games', methods=['GET'])
 def _get_games():
-    games = get_games()
-    if games is None:
+    try:
+        games = get_games()
+    except NoResultFound:
         abort(404)
-    return jsonify({'games': games})
+
+    return jsonify({'games': games}), 201, {'Content-Type': 'application/json'}
 
 
 @app.route('/cah/api/v1.0/games/<int:game_id>', methods=['GET'])
 def _get_game(game_id):
-    game = get_game(game_id)
-    if game is None:
+    try:
+        game = get_game(game_id)
+    except NoResultFound:
         abort(404)
+
     return jsonify({'game': game})
-    # return game
 
 
 @app.route('/cah/api/v1.0/games/<int:game_id>/rounds/<int:round_number>', methods=['GET'])
 def _get_round(game_id, round_number):
-    round = get_round(game_id, round_number)
-    if round is None:
+    try:
+        round = get_round(game_id, round_number)
+    except NoResultFound:
         abort(404)
     return jsonify({'round': round})
 
 
-@app.route('/cah/api/v1.0/games/<int:game_id>/players', methods=['GET'])
-def _get_game_players(game_id):
-    players = get_game_players(game_id)
-    if players is None:
+@app.route('/cah/api/v1.0/games/<int:id>/rounds', methods=['GET'])
+def _get_rounds(id):
+    try:
+        rounds = get_rounds(id)
+    except NoResultFound:
         abort(404)
+    return jsonify({'rounds': rounds})
+
+
+@app.route('/cah/api/v1.0/games/<int:id>/players', methods=['GET'])
+def _get_game_players(id):
+    try:
+        players = get_game_players(id)
+    except NoResultFound:
+        abort(404)
+
     return jsonify({'players': players})
 
 
 @app.route('/cah/api/v1.0/games/<int:game_id>/players/<int:player_id>', methods=['GET'])
 def _get_player(game_id, player_id):
-    player = get_player(game_id, player_id)
-    if player is None:
+    try:
+        player = get_player(game_id, player_id)
+    except NoResultFound:
         abort(404)
-    return jsonify({'player': player})
+
+    return jsonify({'player': player}), 201, {'Content-Type': 'application/json'}
 
 
-@app.route('/cah/api/v1.0/games/<int:game_id>/players/<int:player_id>/hand', methods=['GET'])
-def _get_hand(game_id, player_id):
-    hand = get_hand(game_id, player_id)
-    if hand is None:
+@app.route('/cah/api/v1.0/games/<int:game_id>/players/<int:player_id>/cards', methods=['GET'])
+def _get_player_cards(game_id, player_id):
+    try:
+        cards = get_player_cards(game_id, player_id)
+    except NoResultFound:
         abort(404)
-    return jsonify({'hand': hand})
+
+    return jsonify({'cards': cards}), 201, {'Content-Type': 'application/json'}
+
+
+@app.route('/cah/api/v1.0/black_master_cards', methods=['GET'])
+def _get_black_master_cards():
+    try:
+        black_master_cards = get_black_master_cards()
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'black_master_cards': black_master_cards})
+
+
+@app.route('/cah/api/v1.0/black_master_card/<int:id>', methods=['GET'])
+def _get_black_master_card(id):
+    try:
+        black_master_card = get_black_master_card(id)
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'black_master_card': black_master_card})
+
+
+@app.route('/cah/api/v1.0/white_master_cards', methods=['GET'])
+def _get_white_master_cards():
+    try:
+        white_master_cards = get_white_master_cards()
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'white_master_cards': white_master_cards})
+
+
+@app.route('/cah/api/v1.0/white_master_card/<int:id>', methods=['GET'])
+def _get_white_master_card(id):
+    try:
+        white_master_card = get_white_master_card(id)
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'white_master_card': white_master_card})
+
+
+@app.route('/cah/api/v1.0/games/<int:game_id>/black_game_cards', methods=['GET'])
+def _get_black_game_cards(game_id):
+    try:
+        black_cards = get_black_game_cards(game_id)
+    except NoResultFound:
+        abort(404)
+
+    return jsonify({'black_cards': black_cards})
+
+
+class MyResponse(Response):
+    @classmethod
+    def force_type(cls, rv, environ=None):
+        if isinstance(rv, dict):
+            rv = jsonify(rv)
+        return super(MyResponse, cls).force_type(rv, environ)
 
 
 @app.route('/cah/api/v1.0/rooms/<string:name>/create', methods=['POST'])
@@ -162,7 +258,7 @@ def _deal_white_cards(game_id, player_id, number_of_cards):
     except:
         abort(404)
 
-    hand = get_hand(game_id=game_id, player_id=player_id)
+    hand = get_player_cards(game_id=game_id, player_no=player_id)
     return jsonify({'hand': hand})
 
 
@@ -211,8 +307,9 @@ def not_found(error):
 
 
 from logic import create_new_user, get_all_usernames, get_user_by_username, get_user_by_email
-from logic import create_new_room, create_new_game, create_new_player, get_user_id_by_username
+from logic import create_new_room, create_new_game, create_new_player
 from logic import deal_white_cards
+
 
 @app.route('/')
 def index():
@@ -279,7 +376,6 @@ def logout_user():
 
 
 @app.route('/create_room', methods=['Get'])
-
 # @requires_login
 def create_room():
     create_room_form = forms.CreateRoomForm()
@@ -290,11 +386,6 @@ def create_room():
     )
 
 
-
-# @login_manager.user_loader
-# def load_user(id):
-#     return User.query.get(int(id))
-
 @app.route('/player_list', methods=['Get'])
 def get_player_list():
     player_list = []
@@ -302,6 +393,7 @@ def get_player_list():
         player_list.append({'value': player[0]})
 
     return jsonify({'foo': player_list})
+
 
 @app.route('/create_room', methods=['Post'])
 def create_room_post():
@@ -320,13 +412,12 @@ def create_room_post():
 
     # remove later
     from models import Player
-    player1 = Player.query.filter(Player.id==1).one()
-    player2 = Player.query.filter(Player.id==2).one()
-    player3 = Player.query.filter(Player.id==3).one()
-    player4 = Player.query.filter(Player.id==4).one()
+    player1 = Player.query.filter(Player.id == 1).one()
+    player2 = Player.query.filter(Player.id == 2).one()
+    player3 = Player.query.filter(Player.id == 3).one()
+    player4 = Player.query.filter(Player.id == 4).one()
 
     players = [player1, player2, player3, player4]
-
 
     deal_white_cards(player1.id, 1, 10)
     deal_white_cards(player2.id, 1, 10)
@@ -340,17 +431,20 @@ def create_room_post():
 
     return redirect(url_for('game_room'))
 
+
 def enabled_categories():
     from models import PlayerCard
-    print(PlayerCard.query.filter(PlayerCard.card_id<11).all(), "####################")
-    return PlayerCard.query.filter(PlayerCard.card_id<11).all()
+    print(PlayerCard.query.filter(PlayerCard.card_id < 11).all(), "####################")
+    return PlayerCard.query.filter(PlayerCard.card_id < 11).all()
+
+
 @app.route('/game_room')
 def game_room():
     from models import Player
-    player1 = Player.query.filter(Player.id==1).one()
-    player2 = Player.query.filter(Player.id==2).one()
-    player3 = Player.query.filter(Player.id==3).one()
-    player4 = Player.query.filter(Player.id==4).one()
+    player1 = Player.query.filter(Player.id == 1).one()
+    player2 = Player.query.filter(Player.id == 2).one()
+    player3 = Player.query.filter(Player.id == 3).one()
+    player4 = Player.query.filter(Player.id == 4).one()
 
     players = [player1, player2, player3, player4]
 
@@ -360,8 +454,9 @@ def game_room():
     return render_template(
         "game.html",
         players=players,
-        players_card_choice_form = players_card_choice_form,
+        players_card_choice_form=players_card_choice_form,
     )
+
 
 @app.route('/play_hand', methods=['Post'])
 def play_hand():

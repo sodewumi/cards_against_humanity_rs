@@ -4,66 +4,17 @@ from sqlalchemy import UniqueConstraint
 from flask import Flask, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import ModelSchema, field_for
 from flask_marshmallow.sqla import HyperlinkRelated
 from app import app
 
 import os
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_utils.operators import func
+from sqlalchemy.sql.expression import select
 
 db = SQLAlchemy()
 ma = Marshmallow()
-
-
-# game_player = db.Table('game_player',
-#                        db.Column('game_id', db.Integer, db.ForeignKey('game.id')),
-#                        db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
-#                        )
-
-
-# class GamePlayer(db.Model):
-#     """Specifies which game a player belongs to"""
-#
-#     __tablename__ = "game_player"
-#
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     game_id = db.Column(db.Integer, db.ForeignKey("player.id"))
-#     player_id = db.Column(db.Integer, db.ForeignKey("player.id"))
-#
-#     def __repr__(self):
-#         return "<GamePlayer: id=%d, game_id=%d, player_id=%d>" % (
-#             self.id,
-#             self.game_id,
-#             self.player_id,
-#         )
-
-
-# round_player = db.Table('round_player',
-#                         db.Column('round_id', db.Integer, db.ForeignKey('round.id')),
-#                         db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
-#                         )
-
-
-# class RoundPlayer(db.Model):
-#     """Specifies which round a player belongs to"""
-#
-#     __tablename__ = "round_player"
-#
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     round_id = db.Column(db.Integer, db.ForeignKey("round.id"), primary_key=True)
-#     player_id = db.Column(db.Integer, db.ForeignKey("player.id"), primary_key=True)
-#
-#     def __repr__(self):
-#         return "<RoundPlayer: id=%d, round_id=%d, player_id=%d>" % (
-#             self.id,
-#             self.round_id,
-#             self.player_id,
-#         )
-
-
-# player_hand = db.Table('player_hand',
-#                        db.Column('hand_id', db.Integer, db.ForeignKey('hand.id')),
-#                        db.Column('player_id', db.Integer, db.ForeignKey('player.id'))
-#                        )
 
 
 class User(db.Model):
@@ -123,6 +74,7 @@ class Room(db.Model):
                             backref='room',
                             # backref=db.backref('recipes', lazy='dynamic'))
                             lazy='dynamic')
+
     @property
     def url(self):
         return url_for('room', id=self.id)
@@ -274,6 +226,7 @@ class Round(db.Model):
     black_card_id = db.Column(db.Integer, db.ForeignKey('black_master_card.id'))
     judge_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     winner_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+    # winner = db.relationship("Player")
     black_card = db.relationship(
         "BlackMasterCard", backref=db.backref("round", uselist=False)
     )
@@ -334,6 +287,17 @@ class Player(db.Model):
                             single_parent=True,
                             lazy='dynamic')
 
+    # rounds = db.relationship('Round',
+    #                          primaryjoin="and_(Player.game_id==Round.game_id, Player.id==Round.winner_id)",
+    #                          lazy='dynamic')
+
+    rounds = db.relationship('Round',
+                             primaryjoin="and_(Player.game_id==Round.game_id, Player.id==Round.winner_id)")
+
+    @property
+    def score(self):
+        db.session.query(Round).filter(Round.game_id == self.game_id)
+
     @property
     def url(self):
         return url_for('player', id=self.id)
@@ -341,6 +305,16 @@ class Player(db.Model):
     @property
     def hand(self):
         return self.cards.all()
+
+    @hybrid_property
+    def score(self):
+        # return sum(rnd.balance for rnd in self.rounds)
+        return self.rounds.count()
+
+    @score.expression
+    def score(cls):
+        return select([func.count(Round.id)]).where(Round.game_id == cls.game_id,
+                                                    Round.winner_id == cls.winner_id).label("score")
 
     def __repr__(self):
         return "<Player: id=%d, user_id=%d, name=%s, game_id=%d>" % (
@@ -364,6 +338,10 @@ class RoundWhiteCard(db.Model):
     white_card_id = db.Column(db.Integer, db.ForeignKey(WhiteMasterCard.id))
     pick_num = db.Column(db.Integer)
 
+    white_card = db.relationship(
+        "WhiteMasterCard", backref=db.backref("round", uselist=False)
+    )
+
     # round = db.relationship(
     #     "Round", backref=db.backref("round_white_card")
     # )
@@ -379,41 +357,28 @@ class RoundWhiteCard(db.Model):
         )
 
 
-# def to_json(inst, cls):
-#     """
-#     Jsonify the sql alchemy query result.
-#     """
-#     convert = dict()
-#     # add your coversions for things like datetime's
-#     # and what-not that aren't serializable.
-#     d = dict()
-#     for c in cls.__table__.columns:
-#         v = getattr(inst, c.name)
-#         if c.type in convert.keys() and v is not None:
-#             try:
-#                 d[c.name] = convert[c.type](v)
-#             except:
-#                 d[c.name] = "Error:  Failed to covert using ", str(convert[c.type])
-#         elif v is None:
-#             d[c.name] = str()
-#         else:
-#             d[c.name] = v
-#     print(d)
-#     return json.dumps(d)
-
-
 class UserSchema(ma.ModelSchema):
     class Meta:
         model = User
-        fields = ("id", "email", "username",)
+        fields = ("id", "email", "username", '_links')
         exclude = ("password",)
 
-    author = HyperlinkRelated('author')
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        # 'self': ma.URLFor('_get_user', user_name='<username>'),
+        'collection': ma.URLFor('_get_users')
+    })
 
 
 class RoomSchema(ma.ModelSchema):
     class Meta:
         model = Room
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_room', room_id='<id>'),
+        'collection': ma.URLFor('_get_rooms')
+    })
 
 
 class RoomUserSchema(ma.ModelSchema):
@@ -421,70 +386,124 @@ class RoomUserSchema(ma.ModelSchema):
         model = RoomUser
 
 
-class GameSchema(ma.ModelSchema):
-    class Meta:
-        model = Game
-
-        # players = ma.List(HyperlinkRelated('player'))
-
-    players = ma.URLFor(
-        '_get_game_players', game_id='<id>',
-        url_kwargs={'game_id': '<game_id>'},
-        # Include resource linkage
-        many=True, include_data=True,
-        type_='players'
-    )
-
-    # _links = ma.Hyperlinks({
-    #     'self': ma.URLFor('car_detail', id='<id>'),
-    #     'start': ma.URLFor('car_start', id='<id>')
-    #     'stop': ma.URLFor('car_start', id='<id>')
-    # })
-
-
-class WhiteMasterCard(ma.ModelSchema):
+class WhiteMasterCardSchema(ma.ModelSchema):
     class Meta:
         model = WhiteMasterCard
+        only = ('id', 'text')
+        exclude = ('player', 'round')
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_white_master_card', id='<id>'),
+        'collection': ma.URLFor('_get_white_master_cards')
+    })
+
+
+class BlackMasterCardSchema(ma.ModelSchema):
+    class Meta:
+        model = BlackMasterCard
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_black_master_card', id='<id>'),
+        'collection': ma.URLFor('_get_black_master_cards')
+    })
+
+
+class PlayerCardSchema(ma.ModelSchema):
+    class Meta:
+        model = PlayerCard
+        fields = ('game_id', 'player_id', 'card_id',)
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_player', game_id='<game_id>', player_id='<player_id>'),
+        'collection': ma.URLFor('_get_game_players', player_id='<game_id>')
+    })
 
 
 class PlayerSchema(ma.ModelSchema):
     class Meta:
         model = Player
 
-    cards = ma.Nested(WhiteMasterCard, many=True)
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_player', game_id='<game_id>', player_id='<id>'),
+        'collection': ma.URLFor('_get_game_players', id='<id>')
+    })
+
+    cards = ma.Nested(WhiteMasterCardSchema, many=True)
+    # cards = ma.Nested(PlayerCardSchema, many=True)
+
+    # date_created = field_for(Player, 'score', dump_only=True)
+
+
+class RoundWhiteCardSchema(ma.ModelSchema):
+    class Meta:
+        fields = ('player_id', 'white_card_id', 'pick_num',)
+        model = RoundWhiteCard
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        # 'self': ma.URLFor('_get_round_white_card', game_id='<game_id>', round_number='<round_number>'),
+        'collection': ma.URLFor('_get_round_white_cards', game_id='<game_id>', round_number='<round_number>')
+    })
 
 
 class RoundSchema(ma.ModelSchema):
     class Meta:
         model = Round
+        fields = ('id', 'round_number', 'winner_id', '_links', 'black_card', 'white_cards')
+        ordered = True
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_round', game_id='<game_id>', round_number='<round_number>'),
+        'collection': ma.URLFor('_get_rounds', id='<id>')
+    })
+
+    black_card = ma.Nested(BlackMasterCardSchema)
+    white_cards = ma.Nested(RoundWhiteCardSchema, many=True)
+
+
+class GameSchema(ma.ModelSchema):
+    class Meta:
+        model = Game
+
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        'self': ma.URLFor('_get_games', id='<id>'),
+        'collection': ma.URLFor('_get_games')
+    })
+
+    players = ma.Nested(PlayerSchema, many=True)
+    rounds = ma.Nested(RoundSchema, many=True)
+    # players = ma.List(HyperlinkRelated(
+    #     '_get_game_players',
+    #     url_kwargs={'game_id': '<game_id>', 'player_id': '<player_id>'},
+    #     # Include resource linkage
+    #     many=True, include_data=True,
+    #     type_='players'
+    # ))
+    #
+    # rounds = ma.List(HyperlinkRelated(
+    #     '_get_rounds',
+    #     url_kwargs={'id': '<id>'},
+    #     # Include resource linkage
+    #     many=True, include_data=True,
+    #     type_='rounds'
+    # ))
 
 
 class BlackCardSchema(ma.ModelSchema):
     class Meta:
         model = BlackGameCard
 
-
-# class Hand(db.Model):
-#     __tablename__ = "hand"
-#     __table_args__ = (
-#         db.ForeignKeyConstraint(
-#             ['player_id', 'game_id'],
-#             [Player.id, Player.game_id],
-#         ),
-#     )
-#
-#     id = db.Column(db.Integer, primary_key=True)
-#     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), primary_key=True)
-#     game_id = db.Column(db.Integer, db.ForeignKey('player.game_id'), primary_key=True)
-#     card_id = db.Column(db.Integer, db.ForeignKey("white_master_card.id"), primary_key=True)
-#
-#     def __repr__(self):
-#         return "<Hand: id=%d, player_id=%d, game_id=%d>, card_id=%d>" % (
-#             self.id,
-#             self.player_id,
-#             self.game_id,
-#             self.card_id
-#         )
+    # Smart hyperlinking
+    _links = ma.Hyperlinks({
+        # 'self': ma.URLFor('_get_black_game_card', game_id='<game_id>'),
+        'collection': ma.URLFor('_get_black_game_cards', game_id='<game_id>')
+    })
 
 
 def connect_to_db(app):

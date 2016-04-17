@@ -2,7 +2,8 @@ from flask.ext.wtf import Form
 from wtforms import HiddenField, StringField, TextField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
 from wtforms_alchemy import ModelForm
-from models import User
+# from models import User
+import models
 from logic import create_new_user, get_user_by_username, get_user_by_email
 
 class LoginForm(Form):

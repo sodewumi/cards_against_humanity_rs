@@ -32,7 +32,7 @@ def seed_card_data():
     :return:
     """
 
-    with open('static/js/cards.json') as data_file:
+    with open('app/static/js/cards.json') as data_file:
         try:
             game = json.load(data_file)
             for black_card in game['blackCards']:
@@ -176,7 +176,7 @@ def seed_round(
 
 def play_white_card(
         game_id,
-        round_id,
+        round_number,
         player_id,
         card_id,
         pick_num
@@ -184,7 +184,7 @@ def play_white_card(
     """Check if card is already in play for this round."""
     rwp = RoundWhiteCard.query.filter(
         RoundWhiteCard.game_id == game_id,
-        RoundWhiteCard.round_id == round_id,
+        RoundWhiteCard.round_number == round_number,
         RoundWhiteCard.player_id == player_id,
         RoundWhiteCard.white_card_id == card_id,
         RoundWhiteCard.pick_num == pick_num
@@ -195,12 +195,12 @@ def play_white_card(
         print(rwp)
         raise Exception()
 
-    round = Round.query.filter(Round.game_id == game_id, Round.id == round_id)
+    round = Round.query.filter(Round.game_id == game_id, Round.round_number == round_number)
 
     """Else play the card for this round."""
     rwp = RoundWhiteCard(
         game_id=game_id,
-        round_id=round_id,
+        round_number=round_number,
         player_id=player_id,
         white_card_id=card_id,
         pick_num=pick_num)
